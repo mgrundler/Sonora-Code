@@ -2,6 +2,8 @@
 #functions#
 ###########
 
+# this is a test comment to see what github does
+
 #This function takes in a vector of 8 possible genotypes, and organizes them
 #by simple dominance into 4 phenotypes (morphs)
 
