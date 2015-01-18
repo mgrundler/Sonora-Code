@@ -199,37 +199,48 @@ morph.percent.2[4]=length(geno2.2[geno2.2==4])/start.pop
 morph.percent.2[5]=start.pop
 
 #########EXCHANGE MIGRANTS PRIOR TO BREEDING##########
-geno.2=matrix(geno2)
+geno.matrix=matrix(geno.percent)
+geno.matrix2=matrix(geno.percent.2)
 
 
-geno.2.2=matrix(geno2.2)
 
-#migrants<-geno.2[sample(nrow(geno.2),size=3,replace=FALSE),]
-#migrants2<-geno.2.2[sample(nrow(geno.2.2),size=3,replace=FALSE),]
-
-migrants<-geno.2[1:3,]
-migrants2<-geno.2.2[1:3,]
+migrants<-geno.matrix[1:3,]
+migrants2<-geno.matrix2[1:3,]
 mig=matrix(migrants)
 mig2=matrix(migrants2)
 
 #bind migrants to new population
 
-geno.2new=rbind(geno.2, mig2)
-geno.2.2new=rbind(geno.2.2, mig)
+geno.matrix.bind=rbind(geno.matrix, mig2)
+geno.matrix.2bind=rbind(geno.matrix2, mig)
 
-#remove <- migrants
-#geno.2new %in% remove
-#geno.2new [! geno.2new %in% remove]
-#idx = which(geno.2new %in% migrants)
-#geno.2newer = geno.2new[-which(geno.2new %in% migrants)]
-#geno.2.2newer = geno.2.2new[-which(migrants2 %in% geno.2.2new)]
 
 #remove migrants from initial populations
 
-geno.2newer<-geno.2new[-(1:3),]
-geno.2.2newer<-geno.2.2new[-(1:3),]
+geno.percent.new<-geno.matrix.new[-(1:3),]
+geno.percent.2new<-geno.matrix.2new[-(1:3),]
 
-#Convert new phenotype matrices to genotype matrices for breeding purposes
+#generate new phenotype matrix:
+
+# multiply the locus 2 by 3, so that each potential 2-locus diploid genotype
+# has a unique number associated with it ----> And multiply locus 3 by 5
+# males
+new.geno0=rowSums(cbind(one, two, five*3, six*3, nine*5, ten*5))
+
+geno0.2=rowSums(cbind(one.2, two.2, five.2*3, six.2*3, nine.2*5, ten.2*5))
+#females
+geno1=rowSums(cbind(three, four, seven*3, eight*3, eleven*5, twelve*5))
+
+geno1.2=rowSums(cbind(three.2, four.2, seven.2*3, eight.2*3, eleven.2*5, twelve.2*5))
+
+geno3=append(geno0, geno1)
+
+geno3.2=append(geno0.2, geno1.2)
+# change genotype codes to phenotypes
+geno2=phenotype(geno3)
+
+geno2.2=phenotype(geno3.2)
+
 
 
 
@@ -263,7 +274,7 @@ geno.2.2newer<-geno.2.2new[-(1:3),]
 # that the predator previously handled a morph 1 - 4
 
 one.gen=function(carrying.capacity, n.off, percent.breed, base.attack, similarity, handling, 
-geno.percent, morph.percent, LF){
+geno.percent, morph.percent, geno.percent.2, morph.percent.2 LF){
 
 n.off = 4
 percent.breed = 0.5
@@ -302,14 +313,14 @@ geno.percent.out=c()
 
 #ADD LOCUS 3
 	
-	males1=cbind(rbinom(size, 1, geno.percent[1]),rbinom(size, 1, geno.percent[2]))
+	males1=cbind(rbinom(size, 1, geno.percent.new[1]),rbinom(size, 1, geno.percent.new[2]))
 	LF=0.3
 	recombination=rbinom(nrow(males1), 1, LF)
 	malesLinked=matrix(NA,ncol=2,nrow=nrow(males1))
 	
 	#for second population
 	
-	males1.2=cbind(rbinom(size, 1, geno.percent.2[1]),rbinom(size, 1, geno.percent.2[2]))
+	males1.2=cbind(rbinom(size, 1, geno.percent.2new[1]),rbinom(size, 1, geno.percent.2new[2]))
 	recombination.2=rbinom(nrow(males1.2), 1, LF)
 	malesLinked.2=matrix(NA,ncol=2,nrow=nrow(males1.2))
 
@@ -324,11 +335,11 @@ geno.percent.out=c()
 		malesLinked.2[i,]<- males1.2[i,c(2,1)]
 	}
 	
-	males2=cbind(rbinom(size, 1, geno.percent[5]),rbinom(size, 1, geno.percent[6]))
-	males2.2=cbind(rbinom(size, 1, geno.percent.2[5]),rbinom(size, 1, geno.percent.2[6]))
+	males2=cbind(rbinom(size, 1, geno.percent.new[5]),rbinom(size, 1, geno.percent.new[6]))
+	males2.2=cbind(rbinom(size, 1, geno.percent.2new[5]),rbinom(size, 1, geno.percent.2new[6]))
 	
-	females1=cbind(rbinom(size, 1, geno.percent[3]),rbinom(size, 1, geno.percent[4]))
-	females1.2=cbind(rbinom(size, 1, geno.percent.2[3]),rbinom(size, 1, geno.percent.2[4]))
+	females1=cbind(rbinom(size, 1, geno.percent.new[3]),rbinom(size, 1, geno.percent.new[4]))
+	females1.2=cbind(rbinom(size, 1, geno.percent.2new[3]),rbinom(size, 1, geno.percent.2new[4]))
 	
 		recombination2=rbinom(nrow(females1), 1, LF)
 		recombination2.2=rbinom(nrow(females1.2), 1, LF)
@@ -346,8 +357,8 @@ geno.percent.out=c()
 		femalesLinked.2[i,]<- females1.2[i,c(2,1)]
 	}
 	
-	females2=cbind(rbinom(size, 1, geno.percent[7]),rbinom(size, 1, geno.percent[8]))
-	females2.2=cbind(rbinom(size, 1, geno.percent.2[7]),rbinom(size, 1, geno.percent.2[8]))
+	females2=cbind(rbinom(size, 1, geno.percent.new[7]),rbinom(size, 1, geno.percent.new[8]))
+	females2.2=cbind(rbinom(size, 1, geno.percent.2new[7]),rbinom(size, 1, geno.percent.2new[8]))
 	
 # identify the individuals that get to breed. Currently no reproductive skew
 	
@@ -384,7 +395,7 @@ geno.percent.out=c()
 	femaleLinked.pairs.2 <- femalesLinked.2[lucky.females1.2,]
 
 	female.pairs2=females2[lucky.females2,]
-	female.pairs2=females2.2[lucky.females2.2,]
+	female.pairs2.2=females2.2[lucky.females2.2,]
 
 # generate male gametes (4 per male) for the two loci
 #Alter for linkage between locus one and neutral locas 3 (retain get.offspring for unaffected locus)	
@@ -549,7 +560,8 @@ pt.2=c(sum(pg.2[,1]==1), sum(pg.2[,1]==2), sum(pg.2[,1]==3), sum(pg.2[,1]==4))
 
 ##################
 # this is the negative frequency dependence
-N=pt
+#treat populations 1 and 2 as composite population for purposes of predation
+N=c(pt,pt.2)
 # first we find the total number of predators, in terms of 
 # base attack rate, similarity, handling time, and number of prey
 
@@ -589,11 +601,8 @@ surv=(abs(surv1)+surv1)/2
 
 
 both=ifelse(pt<surv, pt, surv)
-
 phenolist=list(pheno_1, pheno_2,pheno_3,pheno_4)
-
 phenolist2=list()
-
 phenosub=c()
 
 for(q in 1:4){
@@ -604,10 +613,28 @@ for(q in 1:4){
 }
 
 
+both2=ifelse(pt.2<surv, pt.2, surv)
+pop2.phenolist=list(pheno_1.2, pheno_2.2, pheno_3.2, pheno_4.2)
+pop2.phenolist2=list()
+phenosub2=c()
+
+
+for(r in 1:4){
+	if(both2[r]>1){pop2.phenolist2[[r]]=pop2.phenolist[[2]][1:both2[r],]}
+	else if(both2[r]==1){pop2.phenolist2[[r]]=pop2.phenolist[[r]]}
+	else if(both2[r]==0){pop2.phenolist2[[r]]=phenosub2}
+	else{pop2.phenolist2[[r]]=phenosub2}
+}
+
+
+
+
+
 # now we have a matrix of individuals that survived the morph-specific
 # predation
 
 next.gen.2=do.call(rbind, phenolist2)
+pop2.next.gen.2=do.call(rbind, pop2.phenolist2)
 
 
 ##########################
@@ -673,6 +700,8 @@ ngen=10000
 
 geno.percent=matrix(0, nrow=ngen, ncol=12)
 morph.percent=matrix(0, nrow=ngen, ncol=5)
+geno.percent.2=matrix(0, nrow=ngen, ncol=12)
+morph.percent.2=matrix(0, nrow=ngen, ncol=5)
 
 one=rbinom(start.pop/2, 1, (1/3))
 two=rbinom(start.pop/2, 1, (1/3))
@@ -687,10 +716,30 @@ ten=rbinom(start.pop/2, 1, (1/3))
 eleven=rbinom(start.pop/2, 1, (1/3))
 twelve=rbinom(start.pop/2, 1, (1/3))
 
+one.2=rbinom(start.pop/2, 1, (1/3))
+two.2=rbinom(start.pop/2, 1, (1/3))
+three.2=rbinom(start.pop/2, 1, (1/3))
+four.2=rbinom(start.pop/2, 1, (1/3))
+five.2=rbinom(start.pop/2, 1, (1/3))
+six.2=rbinom(start.pop/2, 1, (1/3))
+seven.2=rbinom(start.pop/2, 1, (1/3))
+eight.2=rbinom(start.pop/2, 1, (1/3))
+nine.2=rbinom(start.pop/2, 1, (1/3))
+ten.2=rbinom(start.pop/2, 1, (1/3))
+eleven.2=rbinom(start.pop/2, 1, (1/3))
+twelve.2=rbinom(start.pop/2, 1, (1/3))
+
+
 geno0=rowSums(cbind(one, two,five*3, six*3, nine*5, ten*5))
 geno1=rowSums(cbind(three, four, seven*3, eight*3, eleven*5, twelve*5))
 geno3=append(geno0, geno1)
 geno2=phenotype(geno3)
+
+geno0.2=rowSums(cbind(one.2, two.2, five.2*3, six.2*3, nine.2*5, ten.2*5))
+geno1.2=rowSums(cbind(three.2, four.2, seven.2*3, eight.2*3, eleven.2*5, twelve.2*5))
+geno3.2=append(geno0.2, geno1.2)
+geno2.2=phenotype(geno3.2)
+
 
 geno.percent[1]=sum(one)/(start.pop/2)
 geno.percent[2]=sum(two)/(start.pop/2)
@@ -705,17 +754,39 @@ geno.percent[10]=sum(ten)/(start.pop/2)
 geno.percent[11]=sum(eleven)/(start.pop/2)
 geno.percent[12]=sum(twelve)/(start.pop/2)
 
+
+geno.percent.2[1]=sum(one.2)/(start.pop/2)
+geno.percent.2[2]=sum(two.2)/(start.pop/2)
+geno.percent.2[3]=sum(three.2)/(start.pop/2)
+geno.percent.2[4]=sum(four.2)/(start.pop/2)
+geno.percent.2[5]=sum(five.2)/(start.pop/2)
+geno.percent.2[6]=sum(six.2)/(start.pop/2)
+geno.percent.2[7]=sum(seven.2)/(start.pop/2)
+geno.percent.2[8]=sum(eight.2)/(start.pop/2)
+geno.percent.2[9]=sum(nine.2)/(start.pop/2)
+geno.percent.2[10]=sum(ten.2)/(start.pop/2)
+geno.percent.2[11]=sum(eleven.2)/(start.pop/2)
+geno.percent.2[12]=sum(twelve.2)/(start.pop/2)
+
+
 morph.percent[1]=length(geno2[geno2==1])/start.pop
 morph.percent[2]=length(geno2[geno2==2])/start.pop
 morph.percent[3]=length(geno2[geno2==3])/start.pop
 morph.percent[4]=length(geno2[geno2==4])/start.pop
 morph.percent[5]=start.pop
 
+morph.percent.2[1]=length(geno2.2[geno2.2==1])/start.pop
+morph.percent.2[2]=length(geno2.2[geno2.2==2])/start.pop
+morph.percent.2[3]=length(geno2.2[geno2.2==3])/start.pop
+morph.percent.2[4]=length(geno2.2[geno2.2==4])/start.pop
+morph.percent.2[5]=start.pop
+
+
 #one.gen=function(carrying.capacity, n.off, start.pop, percent.breed, base.attack, similarity, handling, 
 #geno.percent, morph.percent)
 
 
-one.gen(carrying.capacity, n.off, percent.breed, C, s, t, geno.percent, morph.percent)
+one.gen(carrying.capacity, n.off, percent.breed, C, s, t, geno.percent, morph.percent, geno.percent.2, morph.percent.2)
 
 
 ##########
@@ -762,6 +833,20 @@ ten=rbinom(start.pop/2, 1, (1/3))
 eleven=rbinom(start.pop/2, 1, (1/3))
 twelve=rbinom(start.pop/2, 1, (1/3))
 
+one.2=rbinom(start.pop/2, 1, (1/3))
+two.2=rbinom(start.pop/2, 1, (1/3))
+three.2=rbinom(start.pop/2, 1, (1/3))
+four.2=rbinom(start.pop/2, 1, (1/3))
+five.2=rbinom(start.pop/2, 1, (1/3))
+six.2=rbinom(start.pop/2, 1, (1/3))
+seven.2=rbinom(start.pop/2, 1, (1/3))
+eight.2=rbinom(start.pop/2, 1, (1/3))
+nine.2=rbinom(start.pop/2, 1, (1/3))
+ten.2=rbinom(start.pop/2, 1, (1/3))
+eleven.2=rbinom(start.pop/2, 1, (1/3))
+twelve.2=rbinom(start.pop/2, 1, (1/3))
+
+
 #EDIT HERE FOR LOCUS 3
 
 geno0=rowSums(cbind(one, two,five*3, six*3, nine*5, ten*5))
@@ -769,8 +854,16 @@ geno1=rowSums(cbind(three, four, seven*3, eight*3, eleven*5, twelve*5))
 geno3=append(geno0, geno1)
 geno2=phenotype(geno3)
 
+geno0.2=rowSums(cbind(one.2, two.2, five.2*3, six.2*3, nine.2*5, ten.2*5))
+geno1.2=rowSums(cbind(three.2, four.2, seven.2*3, eight.2*3, eleven.2*5, twelve.2*5))
+geno3.2=append(geno0.2, geno1.2)
+geno2.2=phenotype(geno3.2)
+
+
 GP=matrix(0, nrow=n.gen, ncol=12)
+GP2=matrix(0, nrow=n.gen, ncol=12)
 MP=matrix(0, nrow=n.gen, ncol=5)
+MP2=matrix(0, nrow=n.gen, ncol=5)
 
 GP[1,1]=sum(one)/(start.pop/2)
 GP[1,2]=sum(two)/(start.pop/2)
@@ -785,11 +878,33 @@ GP[1,10]=sum(ten)/(start.pop/2)
 GP[1,11]=sum(eleven)/(start.pop/2)
 GP[1,12]=sum(twelve)/(start.pop/2)
 
+GP2[1,1]=sum(one.2)/(start.pop/2)
+GP2[1,2]=sum(two.2)/(start.pop/2)
+GP2[1,3]=sum(three.2)/(start.pop/2)
+GP2[1,4]=sum(four.2)/(start.pop/2)
+GP2[1,5]=sum(five.2)/(start.pop/2)
+GP2[1,6]=sum(six.2)/(start.pop/2)
+GP2[1,7]=sum(seven.2)/(start.pop/2)
+GP2[1,8]=sum(eight.2)/(start.pop/2)
+GP2[1,9]=sum(nine.2)/(start.pop/2)
+GP2[1,10]=sum(ten.2)/(start.pop/2)
+GP2[1,11]=sum(eleven.2)/(start.pop/2)
+GP2[1,12]=sum(twelve.2)/(start.pop/2)
+
+
 MP[1,1]=length(geno2[geno2==1])/start.pop
 MP[1,2]=length(geno2[geno2==2])/start.pop
 MP[1,3]=length(geno2[geno2==3])/start.pop
 MP[1,4]=length(geno2[geno2==4])/start.pop
 MP[1,5]=start.pop
+
+MP2[1,1]=length(geno2.2[geno2.2==1])/start.pop
+MP2[1,2]=length(geno2.2[geno2.2==2])/start.pop
+MP2[1,3]=length(geno2.2[geno2.2==3])/start.pop
+MP2[1,4]=length(geno2.2[geno2.2==4])/start.pop
+MP2[1,5]=start.pop
+
+
 
 
 # For loop to add generations
@@ -801,6 +916,12 @@ for(i in 2:10){
 	MP[i,]=one.gen(200,4, 0.5, C, s, t, GP[i-1,], MP[i-1,])[[1]]
 }
 
+j=3
+for(j in 2:10){
+	GP2[j,]=one.gen(200,4, 0.5, C, s, t, GP2[i-1,], MP2[i-1,])[[2]]
+	MP2[j,]=one.gen(200,4, 0.5, C, s, t, GP2[i-1,], MP2[i-1,])[[1]]
+}
+
 # plotting
 
 plot(x=c(1:10000), y=seq(from=0, to=1, by=1/9999), type="n")
@@ -808,13 +929,22 @@ lines(MP[,1])
 lines(MP[,2], col="red")
 lines(MP[,3], col="blue")
 lines(MP[,4], col="green")
+lines(MP2[,1], col="darkgray")
+lines(MP2[,2], col="orange")
+lines(MP2[,3], col="purple")
+lines(MP2[,4], col="yellow")
+
+
 
 loc1=(GP[,1]+GP[,2]+GP[,5]+GP[,6])/4
 loc2=(GP[,3]+GP[,4]+GP[,7]+GP[,8])/4
 loc3=(GP[,9]+GP[,10]+GP[,11]+GP[,12])/4
-lines(loc1, col="purple")
-lines(loc2, col="yellow")
-lines(loc3, col="orange")
+loc1.2=(GP[,1]+GP[,2]+GP[,5]+GP[,6])/4
+loc2.2=(GP[,3]+GP[,4]+GP[,7]+GP[,8])/4
+loc3.2=(GP2[,9]+GP2[,10]+GP2[,11]+GP2[,12])/4
+lines(loc1, col="darkgreen")
+lines(loc2, col="darkblue")
+lines(loc3, col="deeppink")
 
 
 # concerns: at the moment, individual genotypes are not passed from one generation to the next
