@@ -216,10 +216,14 @@ linked2 <- matrix(NA, nrow=start.pop, ncol=2)
 	}
 	
 geno1 <- cbind(geno1[,1:4], linked1, geno1[,5:6])
-colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+g1ph <- phenotype(rowSums(cbind(geno1[,1:2], geno1[,3:4]*3)))
+geno1 <- cbind(g1ph, geno1[,1:4], linked1, geno1[,5:6])
+colnames(geno1) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
 
 geno2 <- cbind(geno2[,1:4], linked2, geno2[,5:6])
-colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+g2ph <- phenotype(rowSums(cbind(geno2[,1:2], geno2[,3:4]*3)))
+geno2 <- cbind(g2ph, geno2[,1:4], linked2, geno2[,5:6])
+colnames(geno2) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
 
 
 
@@ -233,14 +237,15 @@ pops[[1]] <- list(geno1, geno2)
 
 for(i in 1:n.gen){
 
-g1 <- pops[[i]][[1]]
-g2 <- pops[[i]][[2]]
+g1 <- pops[[i]][[1]][,2:9]
+g2 <- pops[[i]][[2]][,2:9]
+
 # exchange migrants
 n.mig <- round(nrow(g1)*percent.migrate)
 
-geno1m <- rbind(geno2[1:n.mig,], geno1[(n.mig+1):start.pop,])
+geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):start.pop,])
 
-geno2m <- rbind(geno1[1:n.mig,], geno2[(n.mig+1):start.pop,])
+geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):start.pop,])
 
 
 
