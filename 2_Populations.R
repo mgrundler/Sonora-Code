@@ -40,7 +40,7 @@ return(offspring.phenotype13)
 }
 
 #Second population
-
+# we should need only one of these - it's a function, so we can add any input we want
 phenotype2=function(offspring.phenotype2){
 offspring.phenotype1.2=ifelse(offspring.phenotype2==0, 1, offspring.phenotype2)
 
@@ -74,7 +74,7 @@ return(offspring.phenotype13.2)
 
 #The function produces "n.off" offspring genotypes from 2 parental 
 #genotypes
-n.off = 4
+#n.off = 4
 get.offspring=function(v){
 which.allele=rbinom(n.off, 1, 0.5)+1
 offspring.set=c()
@@ -166,10 +166,6 @@ geno.percent[5]=sum(five)/(start.pop/2)
 geno.percent[6]=sum(six)/(start.pop/2)
 geno.percent[7]=sum(seven)/(start.pop/2)
 geno.percent[8]=sum(eight)/(start.pop/2)
-geno.percent[9]=sum(nine)/(start.pop/2)
-geno.percent[10]=sum(ten)/(start.pop/2)
-geno.percent[11]=sum(eleven)/(start.pop/2)
-geno.percent[12]=sum(twelve)/(start.pop/2)
 
 geno.percent.2[1]=sum(one.2)/(start.pop/2)
 geno.percent.2[2]=sum(two.2)/(start.pop/2)
@@ -179,10 +175,7 @@ geno.percent.2[5]=sum(five.2)/(start.pop/2)
 geno.percent.2[6]=sum(six.2)/(start.pop/2)
 geno.percent.2[7]=sum(seven.2)/(start.pop/2)
 geno.percent.2[8]=sum(eight.2)/(start.pop/2)
-geno.percent.2[9]=sum(nine.2)/(start.pop/2)
-geno.percent.2[10]=sum(ten.2)/(start.pop/2)
-geno.percent.2[11]=sum(eleven.2)/(start.pop/2)
-geno.percent.2[12]=sum(twelve.2)/(start.pop/2)
+
 
 
 # make the morph.percent vector
