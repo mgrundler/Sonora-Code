@@ -1,8 +1,54 @@
 # I made most of the chunks into indpendent functions so that we can run them on as many
 # populations as we want
 
-# making phenotypes
-phenotype <- function(offspring.phenotype){
+start.pop <- 50
+LF <- 0.3
+percent.migrate <- 0.05
+percent.breed <- 0.5
+carrying.capacity <- 1000
+baseAttack <- c(.01, .1, .1, .3)
+n.off <- 4
+
+s1=c(1,.1,.1,.1)
+s2=c(.1,1,.1,.1)
+s3=c(.1,.1,1,.1)
+s4=c(.1,.1,.1,1)
+
+sim <- rbind(s1,s2,s3,s4)
+
+T1=c(1,1,1,1)
+T2=c(1,1,1,1)
+T3=c(1,1,1,1)
+T4=c(1,1,1,1)
+
+hand <- rbind(T1,T2,T3,T4)
+
+n.gen <- 100
+
+geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
+
+
+geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
+
+recombination=rbinom(start.pop, 1, LF)
+
+linked1 <- matrix(NA, nrow=start.pop, ncol=2)
+
+	for(i in 1:start.pop){
+	if(recombination[i]==0){linked1[i,] <- geno1[,3:4][i,]} else
+		linked1[i,]<- geno1[,3:4][i,c(2,1)]
+	}
+	
+linked2 <- matrix(NA, nrow=start.pop, ncol=2)
+
+	for(i in 1:start.pop){
+	if(recombination[i]==0){linked2[i,] <- geno2[,3:4][i,]} else
+		linked2[i,] <- geno2[,3:4][i,c(2,1)]
+	}
+
+phenotype=function(offspring.phenotype){
 offspring.phenotype1=ifelse(offspring.phenotype==0, 1, offspring.phenotype)
 
 offspring.phenotype2=ifelse(offspring.phenotype==1, 2, offspring.phenotype1)
@@ -31,8 +77,21 @@ offspring.phenotype13=ifelse(offspring.phenotype==12, 4, offspring.phenotype12)
 
 return(offspring.phenotype13)
 }
+	
+geno1 <- cbind(geno1[,1:4], linked1, geno1[,5:6])
+g1ph <- phenotype(rowSums(cbind(geno1[,1:2], geno1[,3:4]*3)))
+geno1 <- cbind(g1ph, geno1[,1:4], linked1, geno1[,5:6])
+colnames(geno1) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+
+geno2 <- cbind(geno2[,1:4], linked2, geno2[,5:6])
+g2ph <- phenotype(rowSums(cbind(geno2[,1:2], geno2[,3:4]*3)))
+geno2 <- cbind(g2ph, geno2[,1:4], linked2, geno2[,5:6])
+colnames(geno2) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+
+
 
 # breeding
+
 make.off <- function(n.off, mat, start.pop, percent.breed){
 	
 lucky <- sample(start.pop, percent.breed*start.pop)
@@ -161,69 +220,15 @@ if(threshold > nrow(NFmat)){
 return(next.gen)
 }
 
-LV(NF1, carrying.capacity, percent.breed, n.off)
+#LV(NF1, carrying.capacity, percent.breed, n.off)
 # parameters
-
-start.pop <- 50
-LF <- 0.3
-percent.migrate <- 0.05
-percent.breed <- 0.5
-carrying.capacity <- 1000
-baseAttack <- c(.01, .1, .1, .3)
-
-s1=c(1,.1,.1,.1)
-s2=c(.1,1,.1,.1)
-s3=c(.1,.1,1,.1)
-s4=c(.1,.1,.1,1)
-
-sim <- rbind(s1,s2,s3,s4)
-
-T1=c(1,1,1,1)
-T2=c(1,1,1,1)
-T3=c(1,1,1,1)
-T4=c(1,1,1,1)
-
-hand <- rbind(T1,T2,T3,T4)
-
-n.gen <- 100
 
 # make two alleles worth of genotypes - don't differentiate sexes - these are the first elements in a list
 
 
-geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
-colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
-
-
-geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
-colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
 # make the linked alleles
 
-recombination=rbinom(start.pop, 1, LF)
-
-linked1 <- matrix(NA, nrow=start.pop, ncol=2)
-
-	for(i in 1:start.pop){
-	if(recombination[i]==0){linked1[i,] <- geno1[,3:4][i,]} else
-		linked1[i,]<- geno1[,3:4][i,c(2,1)]
-	}
-	
-linked2 <- matrix(NA, nrow=start.pop, ncol=2)
-
-	for(i in 1:start.pop){
-	if(recombination[i]==0){linked2[i,] <- geno2[,3:4][i,]} else
-		linked2[i,] <- geno2[,3:4][i,c(2,1)]
-	}
-	
-geno1 <- cbind(geno1[,1:4], linked1, geno1[,5:6])
-g1ph <- phenotype(rowSums(cbind(geno1[,1:2], geno1[,3:4]*3)))
-geno1 <- cbind(g1ph, geno1[,1:4], linked1, geno1[,5:6])
-colnames(geno1) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
-
-geno2 <- cbind(geno2[,1:4], linked2, geno2[,5:6])
-g2ph <- phenotype(rowSums(cbind(geno2[,1:2], geno2[,3:4]*3)))
-geno2 <- cbind(g2ph, geno2[,1:4], linked2, geno2[,5:6])
-colnames(geno2) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
 
 
 
