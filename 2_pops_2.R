@@ -23,7 +23,7 @@ T4=c(1,1,1,1)
 
 hand <- rbind(T1,T2,T3,T4)
 
-n.gen <- 100
+n.gen <- 10
 
 geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
@@ -425,5 +425,49 @@ points(x=rep(0.41, length=n.gen), y=diff.linked.04, col="yellow")
 points(x=rep(0.5, length=n.gen), y=diff.red.05, col="red")
 points(x=rep(0.505, length=n.gen), y=diff.unlinked.05, col="blue")
 points(x=rep(0.51, length=n.gen), y=diff.linked.05, col="yellow")
+
+###################################################################
+#
+###################################################################
+
+allele.freq.br <- function(list){
+	a1 <- colSums(list[[1]])/nrow(list[[1]])
+	af1 <- c(mean(a1[2], a1[3]), mean(a1[4], a1[5]))
+	a2 <- colSums(list[[2]])/nrow(list[[2]])
+	af2 <- c(mean(a2[2], a2[3]), mean(a2[4], a2[5]))
+	return(list(af1, af2))
+}
+
+
+br.freq <- lapply(pops, allele.freq.br)
+
+plot(x=seq(0,1,by=0.1), y=seq(0,1,by=0.1), type="n")
+
+bands.x <- c()
+red.y <- c()
+
+for(i in 1:length(pops)){
+	bands.x[i] <- br.freq[[i]][[1]][1]
+	red.y[i] <- br.freq[[i]][[1]][2]
+}
+
+bands.x2 <- c()
+red.y2 <- c()
+
+for(i in 1:length(pops)){
+	bands.x2[i] <- br.freq[[i]][[2]][1]
+	red.y2[i] <- br.freq[[i]][[2]][2]
+}
+
+points(bands.x, red.y, col='red')
+
+points(bands.x2, red.y2, pch=15)
+
+
+
+
+
+
+
 
 
