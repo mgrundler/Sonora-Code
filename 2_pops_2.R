@@ -288,9 +288,9 @@ pt2 <- c(sum(pg2[,1]==1), sum(pg2[,1]==2), sum(pg2[,1]==3), sum(pg2[,1]==4))
 # this needs more thought - should frequencies in one population affect what the predator sees?
 # we'll probably need two separate functions for that
 
-NF1 <- NFDS(pg1, ba, sim, hand)
+NF1 <- NFDS(pg1, baseAttack, sim, hand)
 
-NF2 <- NFDS(pg2, ba, sim, hand)
+NF2 <- NFDS(pg2, baseAttack, sim, hand)
 
 
 # randomize
@@ -427,7 +427,7 @@ points(x=rep(0.505, length=n.gen), y=diff.unlinked.05, col="blue")
 points(x=rep(0.51, length=n.gen), y=diff.linked.05, col="yellow")
 
 ###################################################################
-#
+# bands vs. red plot ##############################################
 ###################################################################
 
 allele.freq.br <- function(list){
@@ -441,7 +441,7 @@ allele.freq.br <- function(list){
 
 br.freq <- lapply(pops, allele.freq.br)
 
-plot(x=seq(0,1,by=0.1), y=seq(0,1,by=0.1), type="n")
+plot(x=seq(0,1,by=0.1), y=seq(0,1,by=0.1), type="n", xlab="bands frequency", ylab="red frequency")
 
 bands.x <- c()
 red.y <- c()
