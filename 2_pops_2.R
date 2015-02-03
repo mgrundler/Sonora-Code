@@ -1,11 +1,11 @@
 # I made most of the chunks into indpendent functions so that we can run them on as many
 # populations as we want
 
-start.pop <- 50
+start.pop <- 500
 LF <- 0.3
-percent.migrate <- 0.05
+percent.migrate <- 0.5
 percent.breed <- 0.5
-carrying.capacity <- 1000
+carrying.capacity <- 2000
 baseAttack <- c(.01, .1, .1, .3)
 n.off <- 4
 
@@ -27,7 +27,6 @@ n.gen <- 100
 
 geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
-
 
 geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
@@ -140,7 +139,7 @@ return(offspring)
 
 }
 
-make.off(4, geno1, start.pop, percent.breed)
+#make.off(4, geno1, start.pop, percent.breed)
 
 # negative frequency dependent selection
 
@@ -229,9 +228,6 @@ return(next.gen)
 
 # make the linked alleles
 
-
-
-
 ####################################			
 # test for loop ####################
 ####################################
@@ -318,10 +314,116 @@ pops[[i+1]] <- fin
 
 
 
+allele.freq <- function(list){
+	a1 <- colSums(list[[1]])/nrow(list[[1]])
+	af1 <- c(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]))
+	a2 <- colSums(list[[2]])/nrow(list[[2]])
+	af2 <- c(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]))
+	return(list(af1, af2))
+}
 
 
+pops0 <- lapply(pops, allele.freq)
+
+diff.red.0 <- c()
+diff.linked.0 <- c()
+diff.unlinked.0 <- c()
+
+for(i in 1:n.gen){
+diff.red.0[i] <- abs(pops0[[i]][[1]][2]-pops0[[i]][[2]][2])
+diff.linked.0[i] <- abs(pops0[[i]][[1]][3]-pops0[[i]][[2]][3])
+diff.unlinked.0[i] <- abs(pops0[[i]][[1]][4]-pops0[[i]][[2]][4])
+}
+
+pops0.1 <- lapply(pops, allele.freq)
 
 
+diff.red.01 <- c()
+diff.linked.01 <- c()
+diff.unlinked.01 <- c()
 
+for(i in 1:n.gen){
+diff.red.01[i] <- abs(pops0.1[[i]][[1]][2]-pops0.1[[i]][[2]][2])
+diff.linked.01[i] <- abs(pops0.1[[i]][[1]][3]-pops0.1[[i]][[2]][3])
+diff.unlinked.01[i] <- abs(pops0.1[[i]][[1]][4]-pops0.1[[i]][[2]][4])
+}
+
+pops0.2 <- lapply(pops, allele.freq)
+
+diff.red.02 <- c()
+diff.linked.02 <- c()
+diff.unlinked.02 <- c()
+
+for(i in 1:n.gen){
+diff.red.02[i] <- abs(pops0.2[[i]][[1]][2]-pops0.2[[i]][[2]][2])
+diff.linked.02[i] <- abs(pops0.2[[i]][[1]][3]-pops0.2[[i]][[2]][3])
+diff.unlinked.02[i] <- abs(pops0.2[[i]][[1]][4]-pops0.2[[i]][[2]][4])
+}
+
+pops0.3 <- lapply(pops, allele.freq)
+
+diff.red.03 <- c()
+diff.linked.03 <- c()
+diff.unlinked.03 <- c()
+
+for(i in 1:n.gen){
+diff.red.03[i] <- abs(pops0.3[[i]][[1]][2]-pops0.3[[i]][[2]][2])
+diff.linked.03[i] <- abs(pops0.3[[i]][[1]][3]-pops0.3[[i]][[2]][3])
+diff.unlinked.03[i] <- abs(pops0.3[[i]][[1]][4]-pops0.3[[i]][[2]][4])
+}
+
+
+pops0.4 <- lapply(pops, allele.freq)
+
+
+diff.red.04 <- c()
+diff.linked.04 <- c()
+diff.unlinked.04 <- c()
+
+for(i in 1:n.gen){
+diff.red.04[i] <- abs(pops0.4[[i]][[1]][2]-pops0.4[[i]][[2]][2])
+diff.linked.04[i] <- abs(pops0.4[[i]][[1]][3]-pops0.4[[i]][[2]][3])
+diff.unlinked.04[i] <- abs(pops0.4[[i]][[1]][4]-pops0.4[[i]][[2]][4])
+}
+
+
+pops0.5 <- lapply(pops, allele.freq)
+
+diff.red.05 <- c()
+diff.linked.05 <- c()
+diff.unlinked.05 <- c()
+
+for(i in 1:n.gen){
+diff.red.05[i] <- abs(pops0.5[[i]][[1]][2]-pops0.5[[i]][[2]][2])
+diff.linked.05[i] <- abs(pops0.5[[i]][[1]][3]-pops0.5[[i]][[2]][3])
+diff.unlinked.05[i] <- abs(pops0.5[[i]][[1]][4]-pops0.5[[i]][[2]][4])
+}
+
+plot(seq(0,0.5,1/20), seq(0,1,1/10), type="n", xlab="migration", ylab="difference in allele freq")
+
+points(x=rep(0, length=n.gen), y=diff.red.0, col="red")
+points(x=rep(0.005, length=n.gen), y=diff.unlinked.0, col="blue")
+points(x=rep(0.01, length=n.gen), y=diff.linked.0, col="yellow")
+
+points(x=rep(0.1, length=n.gen), y=diff.red.01, col="red")
+points(x=rep(0.105, length=n.gen), y=diff.unlinked.01, col="blue")
+points(x=rep(0.11, length=n.gen), y=diff.linked.01, col="yellow")
+
+points(x=rep(0.2, length=n.gen), y=diff.red.02, col="red")
+points(x=rep(0.205, length=n.gen), y=diff.unlinked.02, col="blue")
+points(x=rep(0.21, length=n.gen), y=diff.linked.02, col="yellow")
+
+points(x=rep(0.3, length=n.gen), y=diff.red.03, col="red")
+points(x=rep(0.305, length=n.gen), y=diff.unlinked.03, col="blue")
+points(x=rep(0.31, length=n.gen), y=diff.linked.03, col="yellow")
+
+points(x=rep(0.4, length=n.gen), y=diff.red.04, col="red")
+points(x=rep(0.405, length=n.gen), y=diff.unlinked.04, col="blue")
+points(x=rep(0.41, length=n.gen), y=diff.linked.04, col="yellow")
+
+
+points(x=rep(0.5, length=n.gen), y=diff.red.05, col="red")
+points(x=rep(0.505, length=n.gen), y=diff.unlinked.05, col="blue")
+points(x=rep(0.51, length=n.gen), y=diff.linked.05, col="yellow")
 
 
