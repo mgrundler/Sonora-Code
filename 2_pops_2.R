@@ -3,10 +3,9 @@
 
 start.pop <- 500
 LF <- 0.3
-percent.migrate <- 0.5
 percent.breed <- 0.5
 carrying.capacity <- 2000
-baseAttack <- c(.01, .1, .1, .3)
+baseAttack <- c(.1, .1, .1, .3)
 n.off <- 4
 
 s1=c(1,.1,.1,.1)
@@ -23,7 +22,7 @@ T4=c(1,1,1,1)
 
 hand <- rbind(T1,T2,T3,T4)
 
-n.gen <- 10
+# make the starting matrices - we'll make the linked allele later
 
 geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
@@ -31,7 +30,12 @@ colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
+
+# set recombination frequency, select which individuals will recombine
+
 recombination=rbinom(start.pop, 1, LF)
+
+# do the recombination
 
 linked1 <- matrix(NA, nrow=start.pop, ncol=2)
 
@@ -46,6 +50,9 @@ linked2 <- matrix(NA, nrow=start.pop, ncol=2)
 	if(recombination[i]==0){linked2[i,] <- geno2[,3:4][i,]} else
 		linked2[i,] <- geno2[,3:4][i,c(2,1)]
 	}
+
+
+# the function for getting phenotypes from genotypes
 
 phenotype=function(offspring.phenotype){
 offspring.phenotype1=ifelse(offspring.phenotype==0, 1, offspring.phenotype)
@@ -139,7 +146,6 @@ return(offspring)
 
 }
 
-#make.off(4, geno1, start.pop, percent.breed)
 
 # negative frequency dependent selection
 
@@ -219,21 +225,22 @@ if(threshold > nrow(NFmat)){
 return(next.gen)
 }
 
-#LV(NF1, carrying.capacity, percent.breed, n.off)
-# parameters
 
 # make two alleles worth of genotypes - don't differentiate sexes - these are the first elements in a list
+
+# this is for later, to get the average difference in allele frequency between the two populations
 
 freqDiffs <- function(list){
 	a1 <- colMeans(list[[1]])
 	m1 <- cbind(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]))
 	a2 <- colMeans(list[[2]])
 	m2 <- cbind(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]))
-	diff <- m1-m2
+	# I include an absolute value because we care about the magnitude of the distance, not the 
+	# sign
+	diff <- abs(m1-m2)
 }
 
 
-# make the linked alleles
 
 ####################################			
 # test for loop ####################
@@ -334,6 +341,7 @@ allele.freq <- function(list){
 # bands vs. red plot ##############################################
 ###################################################################
 
+
 allele.freq.br <- function(list){
 	a1 <- colSums(list[[1]])/nrow(list[[1]])
 	af1 <- c(mean(a1[2], a1[3]), mean(a1[4], a1[5]))
@@ -371,20 +379,33 @@ points(bands.x2, red.y2, pch=15)
 ###################################
 # function ########################
 ###################################
+
+# set the parameters. The purpose of this function is to compare average
+# differences in allele frequencies between the two populations, so n.gen
+# should be >50 to get a decent average
+
 percent.breed <- 0.5
 carrying.capacity <- 1000
 start.pop <- 50
-n.gen <- 10
+n.gen <- 100
 
-
+# the function - takes a two element vector of percent migrating and recomb. frequency
+# everything else is set. This is so we can feed it a wide range of parameter values 
+# quickly and easily
 
 migLD <- function(vec){
 
-geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+# get the starting genotypes - this needs to be inside the function because
+# we will do multiple iterations later - so we need independent starting populations 
+# for each run of the simulation
+
+geno1 <- matrix(rbinom(start.pop*6, 1, (1/2)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
-geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+geno2 <- matrix(rbinom(start.pop*6, 1, (1/2)), ncol=6)
 colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
+
+# do the recombination
 
 recombination1 <- rbinom(start.pop, 1, vec[2])
 recombination2 <- rbinom(start.pop, 1, vec[2])
@@ -417,6 +438,8 @@ pops <- list()
 
 pops[[1]] <- list(geno1, geno2)
 
+
+# now we do the for loop to fill the list 
 
 for(i in 1:n.gen){
 
@@ -494,6 +517,8 @@ pops[[i+1]] <- fin
 
 }
 
+# once the list is made, we find the difference in allele frequency between the 
+# two populations at each generation
 
 diffs <- lapply(pops, freqDiffs)
 
@@ -502,51 +527,66 @@ fMat <- matrix(unlist(diffs), ncol=4, byrow=T)
 return(fMat)
 }
 
+# decide on the ranges of the migration % and recomb frequency we want to test
+
 pm1 <- seq(0, 0.25, by=0.05)
 rf1 <- seq(0, 0.5, by=0.05)
 
+# now repeat the complete first vector the same number of times as the length of second vector
+
 pm <- rep(pm1, length(rf1))
+
+# repeat each element of the second vector the same number of times as the length of the first vector
 rf <- rep(rf1, each=length(pm1))
+
+# now make a matrix of the two vectors bound together - this way each value of migration
+# is paired with each value of recomb frequency to test the entire range of parameters
 
 test <- cbind(pm, rf)
 
-ltest <- split(test, rep(1:nrow(test), each = ncol(test)))
+# make each row of the matrix into an element in a list - just makes the apply easier
 
-af <- lapply(ltest, migLD)
+ltest <- list()
 
-means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
+for(i in 1:nrow(test)){
+	ltest[[i]] <- test[i,]
+}
 
-meanMat <- matrix(unlist(means), ncol=4, byrow=T)
-
-redMeans <- abs(matrix(meanMat[,2], ncol=length(rf1)))
-
-linkedMeans <- abs(matrix(repLD[[1]][,3], ncol=length(rf1)))
-
-unlinkedMeans <- abs(matrix(repLD[[1]][,4], ncol=length(rf1)))
-
-persp(pm1, rf1, redMeans, theta=30, phi=30, col="lightblue", shade=0.4, ticktype="detailed")
-
-persp(pm1, rf1, linkedMeans, theta=30, phi=30, col="lightblue", shade=0.4, ticktype="detailed")
-
-persp(pm1, rf1, unlinkedMeans, theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed")
-
+# now iterate the function and lapply multiple times to get averages of behavior 
+# of the model at each paramter value
 
 repLD <- list()
 
-n.gen=100
 for(i in 1:25){
+
+# ltest is the same for each iteration, but re-running migLD will get us different
+# starting points and progression through the generations
 	
 af <- lapply(ltest, migLD)
 
+# get colmeans for each run - the columns are the loci, the rows are the
+# difference in allele frequencies between population 1 and population 2
+# at each generation, so taking colmeans gets you the mean difference between
+# populations at that locus across mutliple generations
+
 means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
 
-repLD[[i]] <- abs(matrix(unlist(means), ncol=4, byrow=T))
+# this gets the list of means into a matrix, which is output into a list
+
+repLD[[i]] <- matrix(unlist(means), ncol=4, byrow=T)
 	
 }
 
+# get the mean of the means across runs - each row is an allele 
+# bands, red, linked, unlinked
+# each row is a set of parameter values
 
-mean <- Reduce('+', repLD, repLD[[1]])/10
+mean <- Reduce('+', repLD, repLD[[1]])/25
+
+# take the mean values for the "band" locus, make them into a matrix
+# with values of pm along the rows and values of rf for the columns
+
+xbandMeans <- matrix(mean[,1], ncol=length(rf1))
 
 xredMeans <- matrix(mean[,2], ncol=length(rf1))
 
@@ -554,15 +594,23 @@ xlMeans <- matrix(mean[,3], ncol=length(rf1))
 
 xulMeans <- matrix(mean[,4], ncol=length(rf1))
 
-par(mfrow=c(2,2))
-persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
 
-persp(pm1, rf1, xlMeans, theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+# plots!
+
+par(mfrow=c(2,2))
+par(mar=c(1,1,1,1))
+
+persp(pm1, rf1, xbandMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
 
 persp(pm1, rf1, xredMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+ticktype="detailed", zlim=c(0,0.15))
+
+persp(pm1, rf1, xlMeans, theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
+
+persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
 
 
 
