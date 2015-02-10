@@ -224,6 +224,13 @@ return(next.gen)
 
 # make two alleles worth of genotypes - don't differentiate sexes - these are the first elements in a list
 
+freqDiffs <- function(list){
+	a1 <- colMeans(list[[1]])
+	m1 <- cbind(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]))
+	a2 <- colMeans(list[[2]])
+	m2 <- cbind(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]))
+	diff <- m1-m2
+}
 
 
 # make the linked alleles
@@ -323,109 +330,6 @@ allele.freq <- function(list){
 }
 
 
-pops0 <- lapply(pops, allele.freq)
-
-diff.red.0 <- c()
-diff.linked.0 <- c()
-diff.unlinked.0 <- c()
-
-for(i in 1:n.gen){
-diff.red.0[i] <- abs(pops0[[i]][[1]][2]-pops0[[i]][[2]][2])
-diff.linked.0[i] <- abs(pops0[[i]][[1]][3]-pops0[[i]][[2]][3])
-diff.unlinked.0[i] <- abs(pops0[[i]][[1]][4]-pops0[[i]][[2]][4])
-}
-
-pops0.1 <- lapply(pops, allele.freq)
-
-
-diff.red.01 <- c()
-diff.linked.01 <- c()
-diff.unlinked.01 <- c()
-
-for(i in 1:n.gen){
-diff.red.01[i] <- abs(pops0.1[[i]][[1]][2]-pops0.1[[i]][[2]][2])
-diff.linked.01[i] <- abs(pops0.1[[i]][[1]][3]-pops0.1[[i]][[2]][3])
-diff.unlinked.01[i] <- abs(pops0.1[[i]][[1]][4]-pops0.1[[i]][[2]][4])
-}
-
-pops0.2 <- lapply(pops, allele.freq)
-
-diff.red.02 <- c()
-diff.linked.02 <- c()
-diff.unlinked.02 <- c()
-
-for(i in 1:n.gen){
-diff.red.02[i] <- abs(pops0.2[[i]][[1]][2]-pops0.2[[i]][[2]][2])
-diff.linked.02[i] <- abs(pops0.2[[i]][[1]][3]-pops0.2[[i]][[2]][3])
-diff.unlinked.02[i] <- abs(pops0.2[[i]][[1]][4]-pops0.2[[i]][[2]][4])
-}
-
-pops0.3 <- lapply(pops, allele.freq)
-
-diff.red.03 <- c()
-diff.linked.03 <- c()
-diff.unlinked.03 <- c()
-
-for(i in 1:n.gen){
-diff.red.03[i] <- abs(pops0.3[[i]][[1]][2]-pops0.3[[i]][[2]][2])
-diff.linked.03[i] <- abs(pops0.3[[i]][[1]][3]-pops0.3[[i]][[2]][3])
-diff.unlinked.03[i] <- abs(pops0.3[[i]][[1]][4]-pops0.3[[i]][[2]][4])
-}
-
-
-pops0.4 <- lapply(pops, allele.freq)
-
-
-diff.red.04 <- c()
-diff.linked.04 <- c()
-diff.unlinked.04 <- c()
-
-for(i in 1:n.gen){
-diff.red.04[i] <- abs(pops0.4[[i]][[1]][2]-pops0.4[[i]][[2]][2])
-diff.linked.04[i] <- abs(pops0.4[[i]][[1]][3]-pops0.4[[i]][[2]][3])
-diff.unlinked.04[i] <- abs(pops0.4[[i]][[1]][4]-pops0.4[[i]][[2]][4])
-}
-
-
-pops0.5 <- lapply(pops, allele.freq)
-
-diff.red.05 <- c()
-diff.linked.05 <- c()
-diff.unlinked.05 <- c()
-
-for(i in 1:n.gen){
-diff.red.05[i] <- abs(pops0.5[[i]][[1]][2]-pops0.5[[i]][[2]][2])
-diff.linked.05[i] <- abs(pops0.5[[i]][[1]][3]-pops0.5[[i]][[2]][3])
-diff.unlinked.05[i] <- abs(pops0.5[[i]][[1]][4]-pops0.5[[i]][[2]][4])
-}
-
-plot(seq(0,0.5,1/20), seq(0,1,1/10), type="n", xlab="migration", ylab="difference in allele freq")
-
-points(x=rep(0, length=n.gen), y=diff.red.0, col="red")
-points(x=rep(0.005, length=n.gen), y=diff.unlinked.0, col="blue")
-points(x=rep(0.01, length=n.gen), y=diff.linked.0, col="yellow")
-
-points(x=rep(0.1, length=n.gen), y=diff.red.01, col="red")
-points(x=rep(0.105, length=n.gen), y=diff.unlinked.01, col="blue")
-points(x=rep(0.11, length=n.gen), y=diff.linked.01, col="yellow")
-
-points(x=rep(0.2, length=n.gen), y=diff.red.02, col="red")
-points(x=rep(0.205, length=n.gen), y=diff.unlinked.02, col="blue")
-points(x=rep(0.21, length=n.gen), y=diff.linked.02, col="yellow")
-
-points(x=rep(0.3, length=n.gen), y=diff.red.03, col="red")
-points(x=rep(0.305, length=n.gen), y=diff.unlinked.03, col="blue")
-points(x=rep(0.31, length=n.gen), y=diff.linked.03, col="yellow")
-
-points(x=rep(0.4, length=n.gen), y=diff.red.04, col="red")
-points(x=rep(0.405, length=n.gen), y=diff.unlinked.04, col="blue")
-points(x=rep(0.41, length=n.gen), y=diff.linked.04, col="yellow")
-
-
-points(x=rep(0.5, length=n.gen), y=diff.red.05, col="red")
-points(x=rep(0.505, length=n.gen), y=diff.unlinked.05, col="blue")
-points(x=rep(0.51, length=n.gen), y=diff.linked.05, col="yellow")
-
 ###################################################################
 # bands vs. red plot ##############################################
 ###################################################################
@@ -462,6 +366,204 @@ for(i in 1:length(pops)){
 points(bands.x, red.y, col='red')
 
 points(bands.x2, red.y2, pch=15)
+
+
+###################################
+# function ########################
+###################################
+percent.breed <- 0.5
+carrying.capacity <- 1000
+start.pop <- 50
+n.gen <- 10
+
+
+
+migLD <- function(vec){
+
+geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
+
+geno2 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
+colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
+
+recombination1 <- rbinom(start.pop, 1, vec[2])
+recombination2 <- rbinom(start.pop, 1, vec[2])
+
+linked1 <- matrix(NA, nrow=start.pop, ncol=2)
+
+	for(i in 1:start.pop){
+	if(recombination1[i]==0){linked1[i,] <- geno1[,3:4][i,]} else
+		linked1[i,]<- geno1[,3:4][i,c(2,1)]
+	}
+	
+linked2 <- matrix(NA, nrow=start.pop, ncol=2)
+
+	for(i in 1:start.pop){
+	if(recombination2[i]==0){linked2[i,] <- geno2[,3:4][i,]} else
+		linked2[i,] <- geno2[,3:4][i,c(2,1)]
+	}
+
+geno1 <- cbind(geno1[,1:4], linked1, geno1[,5:6])
+g1ph <- phenotype(rowSums(cbind(geno1[,1:2], geno1[,3:4]*3)))
+geno1 <- cbind(g1ph, geno1[,1:4], linked1, geno1[,5:6])
+colnames(geno1) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+
+geno2 <- cbind(geno2[,1:4], linked2, geno2[,5:6])
+g2ph <- phenotype(rowSums(cbind(geno2[,1:2], geno2[,3:4]*3)))
+geno2 <- cbind(g2ph, geno2[,1:4], linked2, geno2[,5:6])
+colnames(geno2) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+
+pops <- list()
+
+pops[[1]] <- list(geno1, geno2)
+
+
+for(i in 1:n.gen){
+
+g1 <- pops[[i]][[1]][,2:9]
+g2 <- pops[[i]][[2]][,2:9]
+
+# exchange migrants
+n.mig <- round(nrow(g1)*vec[1])
+
+geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):start.pop,])
+
+geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):start.pop,])
+
+
+
+off1 <- make.off(4, geno1m, start.pop, percent.breed)
+off2 <- make.off(4, geno2m, start.pop, percent.breed)
+
+# make phenotypes
+
+g1 <- rbind(geno1m, off1)
+pheno1 <- phenotype(rowSums(cbind(g1[,1:2], g1[,3:4]*3)))
+pg1 <- cbind(pheno1, g1)
+order1 <- order(pg1[,1])
+pg1 <- pg1[order1,]
+
+g2 <- rbind(geno2m, off2)
+pheno2 <- phenotype(rowSums(cbind(g2[,1:2], g2[,3:4]*3)))
+pg2 <- cbind(pheno2, g2)
+order2 <- order(pg2[,1])
+pg2 <- pg2[order2,]
+
+pt1 <- c(sum(pg1[,1]==1), sum(pg1[,1]==2), sum(pg1[,1]==3), sum(pg1[,1]==4))
+	
+	pheno1.1 <- pg1[pg1[,1]==1,]
+	pheno1.2 <- pg1[pg1[,1]==2,]
+	pheno1.3 <- pg1[pg1[,1]==3,]
+	pheno1.4 <- pg2[pg2[,1]==4,]
+
+pt2 <- c(sum(pg2[,1]==1), sum(pg2[,1]==2), sum(pg2[,1]==3), sum(pg2[,1]==4))
+	
+	pheno2.1 <- pg2[pg2[,1]==1,]
+	pheno2.2 <- pg2[pg2[,1]==2,]
+	pheno2.3 <- pg2[pg2[,1]==3,]
+	pheno2.4 <- pg2[pg2[,1]==4,]
+
+##############################################
+# NFDS #######################################
+##############################################
+
+# this needs more thought - should frequencies in one population affect what the predator sees?
+# we'll probably need two separate functions for that
+
+NF1 <- NFDS(pg1, baseAttack, sim, hand)
+
+NF2 <- NFDS(pg2, baseAttack, sim, hand)
+
+
+# randomize
+
+NF1 <- NF1[sample(nrow(NF1)),]
+NF2 <- NF2[sample(nrow(NF2)),]
+
+# normal selection
+
+
+
+fin1 <- LV(NF1, carrying.capacity, percent.breed, n.off)
+fin2 <- LV(NF2, carrying.capacity, percent.breed, n.off)
+
+fin <- list(fin1, fin2)
+# output this final pop to a list and pull it back to start over
+
+pops[[i+1]] <- fin
+
+}
+
+
+diffs <- lapply(pops, freqDiffs)
+
+fMat <- matrix(unlist(diffs), ncol=4, byrow=T)
+
+return(fMat)
+}
+
+pm1 <- seq(0, 0.25, by=0.05)
+rf1 <- seq(0, 0.5, by=0.05)
+
+pm <- rep(pm1, length(rf1))
+rf <- rep(rf1, each=length(pm1))
+
+test <- cbind(pm, rf)
+
+ltest <- split(test, rep(1:nrow(test), each = ncol(test)))
+
+af <- lapply(ltest, migLD)
+
+means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
+
+meanMat <- matrix(unlist(means), ncol=4, byrow=T)
+
+redMeans <- abs(matrix(meanMat[,2], ncol=length(rf1)))
+
+linkedMeans <- abs(matrix(repLD[[1]][,3], ncol=length(rf1)))
+
+unlinkedMeans <- abs(matrix(repLD[[1]][,4], ncol=length(rf1)))
+
+persp(pm1, rf1, redMeans, theta=30, phi=30, col="lightblue", shade=0.4, ticktype="detailed")
+
+persp(pm1, rf1, linkedMeans, theta=30, phi=30, col="lightblue", shade=0.4, ticktype="detailed")
+
+persp(pm1, rf1, unlinkedMeans, theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed")
+
+
+repLD <- list()
+
+n.gen=100
+for(i in 1:25){
+	
+af <- lapply(ltest, migLD)
+
+means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
+
+repLD[[i]] <- abs(matrix(unlist(means), ncol=4, byrow=T))
+	
+}
+
+
+mean <- Reduce('+', repLD, repLD[[1]])/10
+
+xredMeans <- matrix(mean[,2], ncol=length(rf1))
+
+xlMeans <- matrix(mean[,3], ncol=length(rf1))
+
+xulMeans <- matrix(mean[,4], ncol=length(rf1))
+
+par(mfrow=c(2,2))
+persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.25))
+
+persp(pm1, rf1, xlMeans, theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.25))
+
+persp(pm1, rf1, xredMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.25))
+
 
 
 
