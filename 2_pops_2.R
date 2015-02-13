@@ -1,11 +1,11 @@
 # I made most of the chunks into indpendent functions so that we can run them on as many
 # populations as we want
 
-start.pop <- 500
+start.pop <- 50
 LF <- 0.3
 percent.breed <- 0.5
 carrying.capacity <- 2000
-baseAttack <- c(.1, .1, .1, .3)
+baseAttack <- c(.1, .1, .1, .1)
 n.off <- 4
 
 s1=c(1,.1,.1,.1)
@@ -200,7 +200,7 @@ for(q in 1:4){
 # now we have a matrix of individuals that survived the morph-specific
 # predation
 
-next.gen.2=do.call(rbind, phenolist2)
+next.gen.2 <- do.call(rbind, phenolist2)
 
 return(next.gen.2)	
 }
@@ -209,17 +209,19 @@ return(next.gen.2)
 
 LV <- function(NFmat, carrying.capacity, percent.breed, n.off){
 rate.inc <- percent.breed*n.off
+
+nt <- nrow(NFmat)
 	
-threshold <- abs(nrow(NFmat)+(nrow(NFmat)*rate.inc*(1-(nrow(NFmat)/carrying.capacity))))
+threshold <- nt*exp(rate.inc*(1-nt/carrying.capacity))
 	
 if(threshold > nrow(NFmat)){
-	rand=sample(nrow(NFmat))
-	next.gen.1=NFmat[rand,]
-	next.gen=next.gen.1	
+	rand <- sample(nt)
+	next.gen.1 <- NFmat[rand,]
+	next.gen <- next.gen.1	
 	}else{
-	rand=sample(nrow(NFmat))
-	next.gen.1=next.gen.2[rand,]
-	next.gen=next.gen.1[1:threshold,]
+	rand1 <- sample(nt)
+	next.gen.1 <- NFmat[rand1,]
+	next.gen <- next.gen.1[1:threshold,]
 }
 
 return(next.gen)
@@ -386,7 +388,7 @@ points(bands.x2, red.y2, pch=15)
 
 percent.breed <- 0.5
 carrying.capacity <- 1000
-start.pop <- 50
+start.pop <- 10
 n.gen <- 100
 
 # the function - takes a two element vector of percent migrating and recomb. frequency
@@ -441,6 +443,7 @@ pops[[1]] <- list(geno1, geno2)
 
 # now we do the for loop to fill the list 
 
+
 for(i in 1:n.gen){
 
 g1 <- pops[[i]][[1]][,2:9]
@@ -449,26 +452,31 @@ g2 <- pops[[i]][[2]][,2:9]
 # exchange migrants
 n.mig <- round(nrow(g1)*vec[1])
 
-geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):start.pop,])
+if(n.mig==0){
+	geno1m <- g1
+	geno2m <- g2
+}else{
 
-geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):start.pop,])
+geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):nrow(g1),])
 
+geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):nrow(g2),])
 
+}
 
-off1 <- make.off(4, geno1m, start.pop, percent.breed)
-off2 <- make.off(4, geno2m, start.pop, percent.breed)
+off1 <- make.off(4, geno1m, nrow(geno1m), percent.breed)
+off2 <- make.off(4, geno2m, nrow(geno2m), percent.breed)
 
 # make phenotypes
 
-g1 <- rbind(geno1m, off1)
-pheno1 <- phenotype(rowSums(cbind(g1[,1:2], g1[,3:4]*3)))
-pg1 <- cbind(pheno1, g1)
+G1 <- rbind(geno1m, off1)
+pheno1 <- phenotype(rowSums(cbind(G1[,1:2], G1[,3:4]*3)))
+pg1 <- cbind(pheno1, G1)
 order1 <- order(pg1[,1])
 pg1 <- pg1[order1,]
 
-g2 <- rbind(geno2m, off2)
-pheno2 <- phenotype(rowSums(cbind(g2[,1:2], g2[,3:4]*3)))
-pg2 <- cbind(pheno2, g2)
+G2 <- rbind(geno2m, off2)
+pheno2 <- phenotype(rowSums(cbind(G2[,1:2], G2[,3:4]*3)))
+pg2 <- cbind(pheno2, G2)
 order2 <- order(pg2[,1])
 pg2 <- pg2[order2,]
 
@@ -505,10 +513,11 @@ NF2 <- NF2[sample(nrow(NF2)),]
 
 # normal selection
 
-
-
 fin1 <- LV(NF1, carrying.capacity, percent.breed, n.off)
 fin2 <- LV(NF2, carrying.capacity, percent.breed, n.off)
+
+# make sure they recombine again
+
 
 fin <- list(fin1, fin2)
 # output this final pop to a list and pull it back to start over
@@ -529,8 +538,8 @@ return(fMat)
 
 # decide on the ranges of the migration % and recomb frequency we want to test
 
-pm1 <- seq(0, 0.25, by=0.05)
-rf1 <- seq(0, 0.5, by=0.05)
+pm1 <- seq(0.05, 0.25, by=0.05)
+rf1 <- seq(0.05, 0.5, by=0.05)
 
 # now repeat the complete first vector the same number of times as the length of second vector
 
@@ -557,7 +566,7 @@ for(i in 1:nrow(test)){
 
 repLD <- list()
 
-for(i in 1:25){
+for(j in 1:5){
 
 # ltest is the same for each iteration, but re-running migLD will get us different
 # starting points and progression through the generations
@@ -573,7 +582,7 @@ means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
 
 # this gets the list of means into a matrix, which is output into a list
 
-repLD[[i]] <- matrix(unlist(means), ncol=4, byrow=T)
+repLD[[j]] <- matrix(unlist(means), ncol=4, byrow=T)
 	
 }
 
@@ -581,7 +590,7 @@ repLD[[i]] <- matrix(unlist(means), ncol=4, byrow=T)
 # bands, red, linked, unlinked
 # each row is a set of parameter values
 
-mean <- Reduce('+', repLD, repLD[[1]])/25
+mean <- Reduce('+', repLD, repLD[[1]])/5
 
 # take the mean values for the "band" locus, make them into a matrix
 # with values of pm along the rows and values of rf for the columns
@@ -601,16 +610,16 @@ par(mfrow=c(2,2))
 par(mar=c(1,1,1,1))
 
 persp(pm1, rf1, xbandMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+ticktype="detailed", zlim=c(0,0.1))
 
 persp(pm1, rf1, xredMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+ticktype="detailed", zlim=c(0,0.1))
 
 persp(pm1, rf1, xlMeans, theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+ticktype="detailed", zlim=c(0,0.1))
 
 persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+ticktype="detailed", zlim=c(0,0.1))
 
 
 
