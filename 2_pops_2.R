@@ -395,12 +395,12 @@ n.gen <- 100
 # everything else is set. This is so we can feed it a wide range of parameter values 
 # quickly and easily
 
-migLD <- function(vec){
+ migLD <- function(vec){
 
 # get the starting genotypes - this needs to be inside the function because
 # we will do multiple iterations later - so we need independent starting populations 
 # for each run of the simulation
-
+#vec=c(0.1,0.1)
 geno1 <- matrix(rbinom(start.pop*6, 1, (1/2)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
@@ -442,8 +442,7 @@ pops[[1]] <- list(geno1, geno2)
 
 
 # now we do the for loop to fill the list 
-
-
+#i=1
 for(i in 1:n.gen){
 
 g1 <- pops[[i]][[1]][,2:9]
@@ -456,11 +455,9 @@ if(n.mig==0){
 	geno1m <- g1
 	geno2m <- g2
 }else{
-
 geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):nrow(g1),])
 
 geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):nrow(g2),])
-
 }
 
 off1 <- make.off(4, geno1m, nrow(geno1m), percent.breed)
@@ -516,10 +513,36 @@ NF2 <- NF2[sample(nrow(NF2)),]
 fin1 <- LV(NF1, carrying.capacity, percent.breed, n.off)
 fin2 <- LV(NF2, carrying.capacity, percent.breed, n.off)
 
-# make sure they recombine again
+# make sure they recombine again 
+r1 <- rbinom(nrow(fin1), 1, vec[2])
+r2 <- rbinom(nrow(fin2), 1, vec[2])
+
+l1 <- matrix(NA, nrow=nrow(fin1), ncol=2)
+
+	for(k in 1:nrow(fin1)){
+	if(r1[k]==0){l1[k,] <- fin1[,3:4][k,]} else
+		l1[k,]<- fin1[,3:4][k,c(2,1)]
+	}
+	
+l2 <- matrix(NA, nrow=nrow(fin2), ncol=2)
+
+	for(k in 1:nrow(fin2)){
+	if(r2[k]==0){l2[k,] <- fin2[,3:4][k,]} else
+		l2[k,] <- fin2[,3:4][k,c(2,1)]
+	}
+
+FIN1 <- cbind(fin1[,1:4], l1, fin1[,5:6])
+FINPH1 <- phenotype(rowSums(cbind(FIN1[,1:2], FIN1[,3:4]*3)))
+fin.1 <- cbind(FINPH1, FIN1)
+colnames(fin.1) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
+
+FIN2 <- cbind(fin2[,1:4], l2, fin2[,5:6])
+FINPH2 <- phenotype(rowSums(cbind(FIN2[,1:2], FIN2[,3:4]*3)))
+fin.2 <- cbind(FINPH2, FIN2)
+colnames(fin.2) <- c("phenotype","bands1", "bands2", "red1", "red2", "linked1", "linked2","neutral1", "neutral2")
 
 
-fin <- list(fin1, fin2)
+fin <- list(fin.1, fin.2)
 # output this final pop to a list and pull it back to start over
 
 pops[[i+1]] <- fin
