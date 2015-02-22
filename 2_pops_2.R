@@ -5,7 +5,7 @@ start.pop <- 50
 LF <- 0.3
 percent.breed <- 0.5
 carrying.capacity <- 2000
-baseAttack <- c(.1, .1, .1, .1)
+baseAttack <- c(.5, .5, .5, .5)
 n.off <- 4
 
 s1=c(1,.1,.1,.1)
@@ -556,7 +556,7 @@ diffs <- lapply(pops, freqDiffs)
 
 fMat <- matrix(unlist(diffs), ncol=4, byrow=T)
 
-return(fMat)
+return(list(fMat,pops))
 }
 
 # decide on the ranges of the migration % and recomb frequency we want to test
@@ -594,18 +594,18 @@ for(j in 1:10){
 # ltest is the same for each iteration, but re-running migLD will get us different
 # starting points and progression through the generations
 	
-af <- lapply(ltest, migLD)
+repLD[[j]] <- lapply(ltest, migLD)
 
 # get colmeans for each run - the columns are the loci, the rows are the
 # difference in allele frequencies between population 1 and population 2
 # at each generation, so taking colmeans gets you the mean difference between
 # populations at that locus across mutliple generations
 
-means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
+#means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
 
 # this gets the list of means into a matrix, which is output into a list
 
-repLD[[j]] <- matrix(unlist(means), ncol=4, byrow=T)
+#repLD[[j]] <- matrix(unlist(means), ncol=4, byrow=T)
 	
 }
 
@@ -644,6 +644,45 @@ ticktype="detailed", zlim=c(0,0.5))
 persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
 ticktype="detailed", zlim=c(0,0.5))
 
+# allele freq plot
+
+aflist1 <- list()
+aflist2 <- list()
+
+for(j in 1:10){
+
+aflist1[[j]] <- matrix(NA, nrow=50, ncol=4)
+aflist2[[j]] <- matrix(NA, nrow=50, ncol=4)
+
+for(i in 1:50){
+mat1 <- repLD[[j]][[1]][[2]][[i]][[1]]
+mat2 <- repLD[[j]][[1]][[2]][[i]][[2]]
+
+af <- colSums(mat1)
+af2 <- colSums(mat2)
+
+aflist1[[j]][i,] <- c(sum(af[2], af[3])/(2*nrow(mat1)), sum(af[4], af[5])/(2*nrow(mat1)),
+sum(af[6], af[7])/(2*nrow(mat1)), sum(af[8], af[9])/(2*nrow(mat1)))
+
+aflist2[[j]][i,] <- c(sum(af2[2], af2[3])/(2*nrow(mat2)), sum(af2[4], af2[5])/(2*nrow(mat2)),
+sum(af2[6], af2[7])/(2*nrow(mat2)), sum(af2[8], af2[9])/(2*nrow(mat2)))
+}
+}
+
+ALmean1 <- Reduce('+', aflist1, aflist1[[1]])/10
+
+ALmean2 <- Reduce('+', aflist2, aflist2[[1]])/10
+
+
+
+plot(x=1:50, y=seq(0,1,1/49), type="n")
+
+lines(ALmean1[,1])
+lines(ALmean1[,2], col="red")
+lines(ALmean1[,4], col="yellow")
+lines(ALmean2[,1], col="grey")
+lines(ALmean2[,2], col="pink")
+lines(ALmean2[,4], col="orange")
 
 
 #########################################################
@@ -727,10 +766,10 @@ migLD2 <- function(vec){
 # we will do multiple iterations later - so we need independent starting populations 
 # for each run of the simulation
 #vec=c(0.1,0.1)
-geno1 <- matrix(rbinom(start.pop*6, 1, (1/2)), ncol=6)
+geno1 <- matrix(rbinom(start.pop*6, 1, (1/3)), ncol=6)
 colnames(geno1) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
-geno2 <- matrix(rbinom(start.pop*6, 1, (1/2)), ncol=6)
+geno2 <- matrix(rbinom(start.pop*6, 1, (2/3)), ncol=6)
 colnames(geno2) <- c("bands1", "bands2", "red1", "red2", "neutral1", "neutral2")
 
 # do the recombination
@@ -886,28 +925,28 @@ diffs <- lapply(pops, freqDiffs)
 
 fMat <- matrix(unlist(diffs), ncol=4, byrow=T)
 
-return(fMat)
+return(list(fMat, pops))
 }
 
 repLD2 <- list()
 
-for(j in 1:5){
+for(j in 1:10){
 
 # ltest is the same for each iteration, but re-running migLD will get us different
 # starting points and progression through the generations
 	
-af <- lapply(ltest, migLD2)
+repLD2[[j]] <- lapply(ltest, migLD2)
 
 # get colmeans for each run - the columns are the loci, the rows are the
 # difference in allele frequencies between population 1 and population 2
 # at each generation, so taking colmeans gets you the mean difference between
 # populations at that locus across mutliple generations
 
-means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
+#means <- lapply(af, function(mat){x <- colMeans(mat); return(x)})
 
 # this gets the list of means into a matrix, which is output into a list
 
-repLD2[[j]] <- matrix(unlist(means), ncol=4, byrow=T)
+#repLD2[[j]] <- matrix(unlist(means), ncol=4, byrow=T)
 	
 }
 
@@ -935,16 +974,58 @@ par(mfrow=c(2,2))
 par(mar=c(1,1,1,1))
 
 persp(pm1, rf1, xbandMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+ticktype="detailed", zlim=c(0,0.5))
 
 persp(pm1, rf1, xredMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+ticktype="detailed", zlim=c(0,0.5))
 
 persp(pm1, rf1, xlMeans, theta=30, phi=30, col="lightblue", shade=0.4,
 ticktype="detailed", zlim=c(0,0.5))
 
 persp(pm1, rf1, xulMeans,theta=30, phi=30, col="lightblue", shade=0.4,
 ticktype="detailed", zlim=c(0,0.5))
+
+
+# allele freqs
+
+
+aflist1loc <- list()
+aflist2loc <- list()
+
+for(j in 1:10){
+
+aflist1loc[[j]] <- matrix(NA, nrow=50, ncol=4)
+aflist2loc[[j]] <- matrix(NA, nrow=50, ncol=4)
+
+for(i in 1:50){
+mat1 <- repLD2[[j]][[1]][[2]][[i]][[1]]
+mat2 <- repLD2[[j]][[1]][[2]][[i]][[2]]
+
+af <- colSums(mat1)
+af2 <- colSums(mat2)
+
+aflist1loc[[j]][i,] <- c(sum(af[2], af[3])/(2*nrow(mat1)), sum(af[4], af[5])/(2*nrow(mat1)),
+sum(af[6], af[7])/(2*nrow(mat1)), sum(af[8], af[9])/(2*nrow(mat1)))
+
+aflist2loc[[j]][i,] <- c(sum(af2[2], af2[3])/(2*nrow(mat2)), sum(af2[4], af2[5])/(2*nrow(mat2)),
+sum(af2[6], af2[7])/(2*nrow(mat2)), sum(af2[8], af2[9])/(2*nrow(mat2)))
+}
+}
+
+ALmean1loc <- Reduce('+', aflist1loc, aflist1loc[[1]])/10
+
+ALmean2loc <- Reduce('+', aflist2loc, aflist2loc[[1]])/10
+
+
+
+plot(x=1:50, y=seq(0,1,1/49), type="n")
+
+lines(ALmean1loc[,1])
+lines(ALmean1loc[,2], col="red")
+lines(ALmean1loc[,4], col="yellow")
+lines(ALmean2loc[,1], col="grey")
+lines(ALmean2loc[,2], col="pink")
+lines(ALmean2loc[,4], col="orange")
 
 
 
