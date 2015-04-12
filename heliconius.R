@@ -1,24 +1,42 @@
-# make the initial population
+# getting rid of any residual named objects 
 rm(list=ls())
 
+# our normal starting objects
 start.pop <- 50
-p1start <- 1/2
-p2start <- 1/2
 
-rep.dist <- 0.8
-rep.nondist <- 0.2
+ba1 <- c(0.9, 0.01, 0.9, 0.9)
+ba2 <- c(0.9, 0.0, 0.01, 0.9)
 
 LF <- 0.3
+
+n.mig <- 0.1
 
 matchSurv <- 0.9
 nomatchSurv <- 0.1
 
-n.mig <- 
+rep.dist <- 0.8
+rep.nondist <- 0.5
+ 
+s1=c(0,.9,.9,.9)
+s2=c(.9,0,.9,.9)
+s3=c(.9,.9,0,.9)
+s4=c(.9,.9,.9,0)
+
+sim <- rbind(s1,s2,s3,s4)
+
+# the offspring function - this is specific to Heliconius
+# the "Mat" is the genotypes of all of the individuals in the population
+# for Cepea you will need to apply this twice, to each species
+# make sure the matrices are randomly ordered going into this function
 
 make.off <- function(n.off, mat){
 
+# split the population into "males" and "females"
+
 pair1 <- mat[1:(nrow(mat)/2),]
 pair2 <- mat[(1+nrow(mat)/2):nrow(mat),]
+
+# make the matrices for the gametes from the "males"
 
 bar.off1 <- matrix(nrow=n.off, ncol=nrow(pair1))
 spot.off1 <- matrix(nrow=n.off, ncol=nrow(pair1))
@@ -28,11 +46,16 @@ ul.off1 <- matrix(nrow=n.off, ncol=nrow(pair1))
 linked.off1 <- matrix(nrow=n.off, ncol=nrow(pair1))
 
 for(i in 1:nrow(pair1)){
+# choose the bar alleles
 	which.bar <- rbinom(n.off, 1, 0.5)+1
+# put them in the matrix
 	bar.off1[,i] <- pair1[i,2:3][which.bar]
+# since bar and spot are linked, choose the same alleles are bar
 	spot.off1[,i] <- pair1[i,4:5][which.bar]
+# this is the species recognition allele - probably not relevant to Cepea
 	which.sprec <- rbinom(n.off, 1, 0.5)+1
 	sprec.off1[,i] <- pair1[i,6:7][which.sprec]
+# moprh recognition allele
 	which.mphrec <- rbinom(n.off, 1, 0.5)+1
 	mphrec.off1[,i] <- pair1[i,8:9][which.mphrec]
 	which.ul <- rbinom(n.off, 1, 0.5)+1
@@ -40,12 +63,16 @@ for(i in 1:nrow(pair1)){
 	linked.off1[,i] <- pair1[i,12:13][which.bar]
 }
 
+# make them into vectors
+
 bar.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
 spot.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
 sprec.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
 mphrec.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
 ul.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
 linked.off2 <- matrix(nrow=n.off, ncol=nrow(pair2))
+
+# same for the "females"
 
 for(i in 1:nrow(pair2)){
 	which.bar <- rbinom(n.off, 1, 0.5)+1
@@ -60,10 +87,13 @@ for(i in 1:nrow(pair2)){
 	linked.off2[,i] <- pair2[i,12:13][which.bar]
 }
 
+# make the offspring
+
 offspring <- cbind(as.vector(bar.off1), as.vector(bar.off2), as.vector(spot.off1),
 as.vector(spot.off2), as.vector(sprec.off1), as.vector(sprec.off2), as.vector(mphrec.off1),
 as.vector(mphrec.off2), as.vector(ul.off1), as.vector(ul.off2))
 
+# make the recombination 
 recombination <- rbinom(nrow(offspring), 1, LF)
 
 linked1 <- matrix(NA, nrow=nrow(offspring), ncol=2)
@@ -75,7 +105,7 @@ for(i in 1:nrow(offspring)){
 
 recombSpot <- rbinom(nrow(offspring), 1, LF)
 
-# do the recombination
+# do the recombination between bar and spot
 spotPre <- cbind(as.vector(spot.off1), as.vector(spot.off2))
 
 spot1 <- matrix(NA, nrow=nrow(spotPre), ncol=2)
@@ -85,6 +115,7 @@ for(i in 1:nrow(spotPre)){
 	spot1[i,]<- spotPre[,1:2][i,c(2,1)]
 }
 
+# make the offspring a second time with the recombined spot and linked alleles
 
 offspring <- cbind(offspring[,1:2], spot1, offspring[,5:10], linked1)
 colnames(offspring) <- c("bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "mphrec1", "mphrec2","ul1", "ul2", "linked1", "linked2")
@@ -126,15 +157,12 @@ offspring.phenotype13=ifelse(offspring.phenotype==12, 4, offspring.phenotype12)
 return(offspring.phenotype13)
 }
 
-# "bar" allele
-# "spot" allele
-# species recognition allele
-# morph recognition allele
-# linked allele
-# unlinked allele
 
-get.heliconius.offspring <- function(mat){
-# phenotype
+# this does the parsing out of the potential parents based on whether they can 
+# recognize morphs and species - not relevant to Cepea
+
+get.heliconius.offspring <- function(mat, n.off){
+
 # four phenotypes from the two color alleles
 
 pheno <- phenotype(1:4,mat)
@@ -144,10 +172,12 @@ pheno <- phenotype(1:4,mat)
 pg <- cbind(pheno, mat)
 
 # first divide by species recognition
-# phenotype species recognition
 
 sprec <- rowSums(cbind(mat[,5], mat[,6]))
 sprec[sprec==2]=1
+
+# do the if/else thing to account for times that there
+# are none of one genotype or another
 
 rec <- list()
 
@@ -160,10 +190,11 @@ if(sum(sprec==1)/length(sprec)==0){rec[[1]]=pg[1:round(nrow(rec)*rep.nondist),]
 	rec[[2]] <- nr[1:round(nrow(nr)*rep.nondist),]
 }
 
+# now do the same for the morph recognizers
+
 recLucky <- do.call(rbind, rec)
 
 # break up by morph rec
-
 
 rr <- rowSums(cbind(recLucky[,8], recLucky[,9]))
 rr[rr==2]=1
@@ -185,6 +216,8 @@ if(sum(rr==1)/length(rr)==0){
 	}
 }
 
+percent.breed <- sum(unlist(lapply(morphBred, nrow)))/nrow(mat)
+
 off <- list()	
 
 for(i in 1:length(morphBred)){
@@ -193,7 +226,7 @@ for(i in 1:length(morphBred)){
 		} else if(nrow(morphBred[[i]]) < 6){
 			off[[i]] <- morphBred[[i]][,2:13]
 		} else {
-			off[[i]] <- make.off(3, morphBred[[i]])
+			off[[i]] <- make.off(n.off, morphBred[[i]])
 		}
 }
 
@@ -201,18 +234,346 @@ for(i in 1:length(morphBred)){
 offspring <- do.call(rbind, off)
 offspring <- offspring[sample(nrow(offspring)),]
 
-return(offspring)
+return(list(offspring, percent.breed))
 
 }
-####################################
 
+# positive (or negative, depending on the "sim" matrix) frequency dependent selection function
+# takes in a matrix of genotypes, base attack vector, and similarity matrix
+
+PFDS <- function(pgmat, base.attack, similarity){
+
+pt <- c(sum(pgmat[,1]==1), sum(pgmat[,1]==2), sum(pgmat[,1]==3), sum(pgmat[,1]==4))
+
+# parses matrix into each phenotype	
+
+	pheno1 <- pgmat[pgmat[,1]==1,]
+	pheno2 <- pgmat[pgmat[,1]==2,]
+	pheno3 <- pgmat[pgmat[,1]==3,]
+	pheno4 <- pgmat[pgmat[,1]==4,]
+	
+# find how many would be eaten without frequency dependence
+
+tildeN <- base.attack*pt
+
+# make a matrix of the number of each of of the base attack rates multiplied by the switching similarity matrix
+	
+switches <- rbind(tildeN*similarity[1,], tildeN*similarity[2,],tildeN*similarity[3,],
+tildeN*similarity[4,])	
+
+# total number of individuals taken per morph
+totals <- tildeN*rowSums(switches)
+
+# find the proportion of individuals taken in each morph
+proportions <- totals/sum(totals)
+}
+
+
+# this is for plotting
+freqDiffs <- function(list){
+	a1 <- colMeans(list[[1]])
+	m1 <- cbind(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]), mean(a1[10], a1[11]), mean(a1[12], a1[13]))
+	a2 <- colMeans(list[[2]])
+	m2 <- cbind(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]),mean(a2[10], a2[11]), mean(a2[12], a2[13]))
+	# I include an absolute value because we care about the magnitude of the distance, not the sign
+	diff <- abs(m1-m2)
+	return(diff)
+}
+
+
+
+####################################
+# I made two functions - one where the predator sees both populations, one where the predator sees one
 ####################################
 # predator sees single pop #########
 ####################################
 
-vec=c(0.1, 0.1)
+
+start.pop <- 1000
+p1start <- 0.5
+p2start <- 0.5
+n.off <- 3
+carrying.capacity <- 1000
+ngen <- 8
+
 
 migHel1pop <- function(vec){
+
+# get the genotypes started	
+geno1 <- matrix(rbinom(start.pop*8, 1, p1start), ncol=8)
+
+recombSpot <- rbinom(nrow(geno1), 1, LF)
+
+# do the recombination
+spot1 <- matrix(NA, nrow=nrow(geno1), ncol=2)
+
+for(i in 1:start.pop){
+	if(recombSpot[i]==0){spot1[i,] <- geno1[,1:2][i,]} else
+	spot1[i,]<- geno1[,1:2][i,c(2,1)]
+}
+
+recombination <- rbinom(nrow(geno1), 1, LF)
+
+linked1 <- matrix(NA, nrow=nrow(geno1), ncol=2)
+
+for(i in 1:start.pop){
+	if(recombination[i]==0){linked1[i,] <- geno1[,1:2][i,]} else
+		linked1[i,]<- geno1[,1:2][i,c(2,1)]
+}
+
+pheno1 <- phenotype(1:4, geno1)
+
+geno1 <- cbind(pheno1, geno1[,1:2], spot1, geno1[,3:8], linked1)
+colnames(geno1) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "mphrec1", "mphrec2","ul1", "ul2", "linked1", "linked2")
+
+# second pop
+
+geno2 <- matrix(rbinom(start.pop*8, 1, p2start), ncol=8)
+
+recombSpot2 <- rbinom(nrow(geno2), 1, LF)
+
+# do the recombination
+spot1.2 <- matrix(NA, nrow=nrow(geno2), ncol=2)
+
+for(i in 1:start.pop){
+	if(recombSpot2[i]==0){spot1.2[i,] <- geno2[,1:2][i,]} else
+	spot1.2[i,]<- geno2[,1:2][i,c(2,1)]
+}
+
+recombination2 <- rbinom(nrow(geno2), 1, LF)
+
+linked1.2 <- matrix(NA, nrow=nrow(geno2), ncol=2)
+
+for(i in 1:start.pop){
+	if(recombination2[i]==0){linked1.2[i,] <- geno2[,1:2][i,]} else
+		linked1.2[i,]<- geno2[,1:2][i,c(2,1)]
+}
+
+pheno2 <- phenotype(1:4, geno2)
+
+geno2 <- cbind(pheno2, geno2[,1:2], spot1.2, geno2[,3:8], linked1.2)
+colnames(geno2) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "mphrec1", "mphrec2","ul1", "ul2", "linked1", "linked2")
+
+# start for loop ###############################
+
+pops <- list()
+
+pops[[1]] <- list(geno1, geno2)
+
+for(z in 1:ngen){
+		# make offspring
+	g1 <- pops[[z]][[1]][,2:13]	
+	g2 <- pops[[z]][[2]][,2:13]
+
+	# migrate
+	n.mig <- round(nrow(g1)*vec[1])
+
+if(n.mig==0){
+	geno1m <- g1
+	geno2m <- g2
+	}else{
+	geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):nrow(g1),])
+
+	geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):nrow(g2),])
+}
+	
+	# make offspring - this accounts for who gets to reproduce according to morph/species recognition,
+	# and the resulting offspring
+	offspring1 <- get.heliconius.offspring(geno1m,n.off)
+	offspring2 <- get.heliconius.offspring(geno2m,n.off)
+	off1 <- offspring1[[1]]
+	off2 <- offspring2[[1]]
+	pb1 <- offspring1[[2]]
+	pb2 <- offspring2[[2]]
+	
+	# make phenotypes - break them in lists and use the if/else to account for morphs that aren't in the population
+	
+	pheno1 <- phenotype(1:4, off1)
+	pheno2 <- phenotype(1:4, off2)
+	
+	pg1 <- cbind(pheno1, off1)
+	order1 <- order(pg1[,1])
+	pg1 <- pg1[order1,]
+	
+pt1 <- c(sum(pg1[,1]==1), sum(pg1[,1]==2), sum(pg1[,1]==3), sum(pg1[,1]==4))
+
+phen <- 1:4
+ptlist1 <- list()
+
+for(i in 1:4){
+	if(pt1[i]==0){ptlist1[[i]]=c()}
+	else{ptlist1[[i]]=pg1[pg1[,1]==phen[i],]}
+}
+	
+	pg2 <- cbind(pheno2, off2)
+	order2 <- order(pg2[,1])
+	pg2 <- pg2[order2,]
+	
+pt2 <- c(sum(pg2[,1]==1), sum(pg2[,1]==2), sum(pg2[,1]==3), sum(pg2[,1]==4))
+
+ptlist2 <- list()
+
+for(i in 1:4){
+	if(pt2[i]==0){ptlist2[[i]]=c()}
+	else{ptlist2[[i]]=pg2[pg2[,1]==phen[i],]}
+}
+
+### frequency dependent selection ####################
+fds1 <- do.call(rbind, ptlist1)
+fds2 <- do.call(rbind, ptlist2)
+
+# do the frequency dependent selection - you can put any matrix into the function
+
+FDS1 <- PFDS(fds1, ba1, sim)
+
+FDS2 <- PFDS(fds2, ba2, sim)
+######################################################
+
+# use the LV equation to decide how many will die
+
+threshold1 <- round(nrow(fds1)*exp(n.off*pb1*(1-nrow(fds1)/carrying.capacity)))
+threshold2 <- round(nrow(fds2)*exp(n.off*pb2*(1-nrow(fds2)/carrying.capacity)))
+
+# if/else to deal with non-existent morphs - vec[2] decides what percentage of the total 
+# mortality will be morph-dependent. You take that percentage and divide it up between 
+# morphs to get the final number that will be removed
+
+if(nrow(fds1)>threshold1){
+	n.pred1 <- round(((nrow(fds1)-threshold1)*vec[2])*FDS1)
+}else{n.pred1 <- c(0,0,0,0)}
+
+if(nrow(fds2)>threshold2){
+	n.pred2 <- round(((nrow(fds2)-threshold2)*vec[2])*FDS2)
+}else{n.pred2 <- c(0,0,0,0)}
+
+# remove the predated ones
+
+predated1 <- list()
+
+for(i in 1:4){
+	predated1[[i]] <- ptlist1[[i]][1:(nrow(ptlist1[[i]])-n.pred1[i]),]
+}
+
+predated2 <- list()
+
+for(i in 1:4){
+	predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]
+}
+
+fin1 <- do.call(rbind, predated1)
+fin1 <- fin1[sample(nrow(fin1)),]
+fin2 <- do.call(rbind, predated2)
+fin2 <- fin2[sample(nrow(fin2)),]
+
+# now get rid of the rest that will die, taking random individuals
+
+LV1 <- round(threshold1-(nrow(fds1)-threshold1)*(vec[2]))
+LV2 <- round(threshold2-(nrow(fds2)-threshold2)*(vec[2]))
+
+if(nrow(fin1)>threshold1){
+	fin1 <- fin1[1:LV1,]
+} else{fin1 <- fin1}
+
+if(nrow(fin2)>threshold2){
+	fin2 <- fin2[1:LV2,]
+} else{fin2 <- fin2}
+
+
+fin <- list(fin1, fin2)
+
+pops[[z+1]] <- fin
+
+}
+
+# get the frequency differences between populations using this code
+diffs <- lapply(pops, freqDiffs)
+
+fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
+
+return(fMat)
+
+}
+
+# this is all to make figures
+
+pm1 <- seq(0, 0.1, by=0.02)
+rf1 <- seq(0, 1, by=0.2)
+
+# now repeat the complete first vector the same number of times as the length of second vector
+
+pm <- rep(pm1, length(rf1))
+
+# repeat each element of the second vector the same number of times as the length of the first vector
+rf <- rep(rf1, each=length(pm1))
+
+# now make a matrix of the two vectors bound together - this way each value of migration
+# is paired with each value of recomb frequency to test the entire range of parameters
+
+test <- cbind(pm, rf)
+
+# make each row of the matrix into an element in a list - just makes the apply easier
+
+ltest <- list()
+
+for(i in 1:nrow(test)){
+	ltest[[i]] <- test[i,]
+}
+
+
+x <- list()
+
+for(i in 1:length(ltest)){
+x[[i]] <- migHel1pop(ltest[[i]])	
+}
+
+
+mat <- matrix(NA, ncol=6, nrow=31)
+
+for(i in 1:31){
+mat[i,] <- colMeans(x[[i]][2:9,])
+}
+
+xbarMeans <- matrix(mat[1:30,1], ncol=6)
+
+xspotMeans <- matrix(mat[1:30,2], ncol=6)
+
+xspRecMeans <- matrix(mat[1:30,3], ncol=6)
+
+xmrphRecMeans <- matrix(mat[1:30,4], ncol=6)
+
+
+# plots!
+
+par(mfrow=c(2,2))
+par(mar=c(1,1,1,1))
+
+persp(rf1[1:5], pm1, xbarMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
+
+persp(rf1[1:5], pm1, xspotMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
+
+persp(rf1[1:5], pm1, xspRecMeans, theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
+
+persp(rf1[1:5], pm1, xmrphRecMeans,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.15))
+
+
+
+#############################################
+# two pops ##################################
+#############################################
+
+start.pop <- 1000
+p1start <- 0.5
+p2start <- 0.5
+n.off <- 3
+carrying.capacity <- 1000
+ngen <- 8
+
+
+migHel2pop <- function(vec){
 	
 geno1 <- matrix(rbinom(start.pop*8, 1, p1start), ncol=8)
 
@@ -242,7 +603,7 @@ colnames(geno1) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sp
 
 # second pop
 
-geno2 <- matrix(rbinom(start.pop*8, 1, p1start), ncol=8)
+geno2 <- matrix(rbinom(start.pop*8, 1, p2start), ncol=8)
 
 recombSpot2 <- rbinom(nrow(geno2), 1, LF)
 
@@ -264,6 +625,7 @@ for(i in 1:start.pop){
 }
 
 pheno2 <- phenotype(1:4, geno2)
+
 geno2 <- cbind(pheno2, geno2[,1:2], spot1.2, geno2[,3:8], linked1.2)
 colnames(geno2) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "mphrec1", "mphrec2","ul1", "ul2", "linked1", "linked2")
 
@@ -273,28 +635,31 @@ pops <- list()
 
 pops[[1]] <- list(geno1, geno2)
 
-i=1
-
-for(i in 1:ngen){
+z=1
+for(z in 1:ngen){
 		# make offspring
-	g2 <- pops[[i]][[2]][,2:13]	
-	g1 <- pops[[i]][[1]][,2:13]
+	g1 <- pops[[z]][[1]][,2:13]	
+	g2 <- pops[[z]][[2]][,2:13]
 
 	# migrate
 	n.mig <- round(nrow(g1)*vec[1])
 
-	if(n.mig==0){
+if(n.mig==0){
 	geno1m <- g1
 	geno2m <- g2
 	}else{
 	geno1m <- rbind(g2[1:n.mig,], g1[(n.mig+1):nrow(g1),])
 
 	geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):nrow(g2),])
-	}
+}
 	
 	# make offspring
-	off1 <- get.heliconius.offspring(geno1m)
-	off2 <- get.heliconius.offspring(geno2m)
+	offspring1 <- get.heliconius.offspring(geno1m,n.off)
+	offspring2 <- get.heliconius.offspring(geno2m,n.off)
+	off1 <- offspring1[[1]]
+	off2 <- offspring2[[1]]
+	pb1 <- offspring1[[2]]
+	pb2 <- offspring2[[2]]
 	
 	# make phenotypes
 	
@@ -305,63 +670,91 @@ for(i in 1:ngen){
 	order1 <- order(pg1[,1])
 	pg1 <- pg1[order1,]
 	
+pt1 <- c(sum(pg1[,1]==1), sum(pg1[,1]==2), sum(pg1[,1]==3), sum(pg1[,1]==4))
+
+phen <- 1:4
+ptlist1 <- list()
+
+for(i in 1:4){
+	if(pt1[i]==0){ptlist1[[i]]=c()}
+	else{ptlist1[[i]]=pg1[pg1[,1]==phen[i],]}
+}
+	
 	pg2 <- cbind(pheno2, off2)
 	order2 <- order(pg2[,1])
 	pg2 <- pg2[order2,]
+	
+pt2 <- c(sum(pg2[,1]==1), sum(pg2[,1]==2), sum(pg2[,1]==3), sum(pg2[,1]==4))
+
+ptlist2 <- list()
+
+for(i in 1:4){
+	if(pt2[i]==0){ptlist2[[i]]=c()}
+	else{ptlist2[[i]]=pg2[pg2[,1]==phen[i],]}
 }
 
+### frequency dependent selection ####################
+fds1 <- do.call(rbind, ptlist1)
+fds2 <- do.call(rbind, ptlist2)
+
+fds <- rbind(fds1, fds2)
+
+FDS1 <- PFDS(fds, ba1, sim)
+FDS2 <- PFDS(fds, ba2, sim)
+
+######################################################
+threshold1 <- round(nrow(fds1)*exp(n.off*pb1*(1-nrow(fds1)/carrying.capacity)))
+threshold2 <- round(nrow(fds2)*exp(n.off*pb2*(1-nrow(fds2)/carrying.capacity)))
+
+if(nrow(fds1)>threshold1){
+	n.pred1 <- round(((nrow(fds1)-threshold1)*vec[2])*FDS1)
+}else{n.pred1 <- c(0,0,0,0)}
+
+if(nrow(fds2)>threshold2){
+	n.pred2 <- round(((nrow(fds2)-threshold2)*vec[2])*FDS2)
+}else{n.pred2 <- c(0,0,0,0)}
+
+
+predated1 <- list()
+
+for(i in 1:4){
+	predated1[[i]] <- ptlist1[[i]][1:(nrow(ptlist1[[i]])-n.pred1[i]),]
 }
 
-# selection
-phenoSel <- phenotype(1:4,offspring)
+predated2 <- list()
 
-offSel <- cbind(phenoSel, offspring)
-
-oneBS <- offSel[offSel[,1]==1,]
-twoBS <- offSel[offSel[,1]==2,]
-threeBS <- offSel[offSel[,1]==3,]
-fourBS <- offSel[offSel[,1]==4,]
-
-oneS <- oneBS[1:round(nrow(oneBS)*nomatchSurv),]
-twoS <- twoBS[1:round(nrow(twoBS)*matchSurv),]
-threeS <- threeBS[1:round(nrow(threeBS)*nomatchSurv),]
-fourS <- fourBS[1:round(nrow(fourBS)*nomatchSurv),]
-
-
-selNames <- c("oneS", "twoS", "threeS", "fourS")
-
-selList <- list()
-selSub <- c()
-
-for(z in 1:4){
-	if(exists(selNames[z])){selList[[z]] <- get(selNames[z])}
-	else(selList[[z]] <- selSub)
+for(i in 1:4){
+	predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]
 }
 
-survivors <- do.call(rbind,selList)
+fin1 <- do.call(rbind, predated1)
+fin1 <- fin1[sample(nrow(fin1)),]
+fin2 <- do.call(rbind, predated2)
+fin2 <- fin2[sample(nrow(fin2)),]
 
-survivors <- survivors[sample(nrow(survivors)),]
+LV1 <- round(threshold1-(nrow(fds1)-threshold1)*(vec[2]))
+LV2 <- round(threshold2-(nrow(fds2)-threshold2)*(vec[2]))
 
+if(nrow(fin1)>threshold1){
+	fin1 <- fin1[1:LV1,]
+} else{fin1 <- fin1}
 
-
-# migration
-
-
-
-
-
-
-
-
-
-
+if(nrow(fin2)>threshold2){
+	fin2 <- fin2[1:LV2,]
+} else{fin2 <- fin2}
 
 
+fin <- list(fin1, fin2)
 
+pops[[z+1]] <- fin
 
+}
+diffs <- lapply(pops, freqDiffs)
 
+fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
 
+return(fMat)
 
-
+}
 
 
