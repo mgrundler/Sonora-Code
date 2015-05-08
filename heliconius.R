@@ -123,8 +123,8 @@ colnames(offspring) <- c("bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "
 return(offspring)
 }
 
-phenotype <- function(vec, mat){
-genos <- mat[,vec]
+phenotype <- function(vector, mat){
+genos <- mat[,vector]
 
 offspring.phenotype <- rowSums(cbind(genos[,1:2], genos[,3:4]*3))
 
@@ -161,6 +161,7 @@ return(offspring.phenotype13)
 # this does the parsing out of the potential parents based on whether they can 
 # recognize morphs and species - not relevant to Cepea
 
+#mat <- geno1m
 get.heliconius.offspring <- function(mat, n.off){
 
 # four phenotypes from the two color alleles
@@ -181,9 +182,9 @@ sprec[sprec==2]=1
 
 rec <- list()
 
-if(sum(sprec==1)/length(sprec)==0){rec[[1]]=pg[1:round(nrow(rec)*rep.nondist),]
-	} else if(sum(sprec==1)/length(sprec)==1){rec[[1]]=pg[1:round(nrow(nr)*rep.dist),]
-	} else {
+if(sum(sprec==1)/length(sprec)==0){rec[[1]]=pg[1:round(length(sprec)*rep.nondist),]
+	} else if(sum(sprec==1)/length(sprec)==1){rec[[1]]=pg[1:round(length(sprec)*rep.dist),]
+	} else if(sum(sprec==1)*rep.dist < 1 & sum(sprec==0)*rep.nondist >1){rec[[1]] <- pg[1:round(length(sprec)*rep.nondist),]} else if(sum(sprec==1)*rep.dist > 1 & sum(sprec==0)*rep.nondist <1){rec[[1]]=pg[1:round(length(sprec)*rep.dist),]}else{
 	r <- pg[sprec==1,]
 	rec[[1]] <- r[1:round(nrow(r)*rep.dist),]
 	nr <- pg[sprec==0,]
@@ -268,20 +269,6 @@ totals <- tildeN*rowSums(switches)
 proportions <- totals/sum(totals)
 }
 
-
-# this is for plotting
-freqDiffs <- function(list){
-	a1 <- colMeans(list[[1]])
-	m1 <- cbind(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]), mean(a1[10], a1[11]), mean(a1[12], a1[13]))
-	a2 <- colMeans(list[[2]])
-	m2 <- cbind(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]),mean(a2[10], a2[11]), mean(a2[12], a2[13]))
-	# I include an absolute value because we care about the magnitude of the distance, not the sign
-	diff <- abs(m1-m2)
-	return(diff)
-}
-
-
-
 ####################################
 # I made two functions - one where the predator sees both populations, one where the predator sees one
 ####################################
@@ -294,8 +281,11 @@ p1start <- 0.5
 p2start <- 0.5
 n.off <- 3
 carrying.capacity <- 1000
-ngen <- 8
+ngen <- 100
 
+
+#vec <- c(0.1, 0.1)
+#vec <- ltest[[12]]
 
 migHel1pop <- function(vec){
 
@@ -358,8 +348,9 @@ colnames(geno2) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sp
 
 pops <- list()
 
-pops[[1]] <- list(geno1, geno2)
+pops[[1]] <-list(geno1, geno2)
 
+#z=9
 for(z in 1:ngen){
 		# make offspring
 	g1 <- pops[[z]][[1]][,2:13]	
@@ -448,16 +439,25 @@ if(nrow(fds2)>threshold2){
 
 # remove the predated ones
 
+pt1[is.na(pt1)] <- 0
+n.pred1[is.na(n.pred1)] <- 0
+
+pt2[is.na(pt2)] <- 0
+n.pred2[is.na(n.pred2)] <- 0
+
+
+
 predated1 <- list()
 
 for(i in 1:4){
-	predated1[[i]] <- ptlist1[[i]][1:(nrow(ptlist1[[i]])-n.pred1[i]),]
+	if(pt1[[i]] > (n.pred1[i]+2)){predated1[[i]] <- ptlist1[[i]][1:(pt1[[i]]-n.pred1[i]),]}else{predated1[[i]] <- c()}
 }
 
 predated2 <- list()
 
 for(i in 1:4){
-	predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]
+	if(pt2[[i]]>(n.pred2[i]+2)){predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]}else{
+		predated2[[i]] <- c()}
 }
 
 fin1 <- do.call(rbind, predated1)
@@ -472,11 +472,12 @@ LV2 <- round(threshold2-(nrow(fds2)-threshold2)*(vec[2]))
 
 if(nrow(fin1)>threshold1){
 	fin1 <- fin1[1:LV1,]
-} else{fin1 <- fin1}
+} else if(nrow(fin1)>1){fin1 <- fin1}else{fin1 <- c()}
+
 
 if(nrow(fin2)>threshold2){
 	fin2 <- fin2[1:LV2,]
-} else{fin2 <- fin2}
+} else if(nrow(fin2)>1){fin2 <- fin2}else{fin2<- c()}
 
 
 fin <- list(fin1, fin2)
@@ -486,30 +487,30 @@ pops[[z+1]] <- fin
 }
 
 # get the frequency differences between populations using this code
-diffs <- lapply(pops, freqDiffs)
+#diffs <- lapply(pops, freqDiffs)
 
-fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
+#fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
 
-return(fMat)
+return(pops)
 
 }
 
 # this is all to make figures
 
-pm1 <- seq(0, 0.1, by=0.02)
-rf1 <- seq(0, 1, by=0.2)
+pm1 <- seq(0, 0.1, by=0.01)
+nfds1 <- seq(0, 1, by=0.2)
 
 # now repeat the complete first vector the same number of times as the length of second vector
 
-pm <- rep(pm1, length(rf1))
+pm <- rep(pm1, length(nfds1))
 
 # repeat each element of the second vector the same number of times as the length of the first vector
-rf <- rep(rf1, each=length(pm1))
+nfds <- rep(nfds1, each=length(pm1))
 
 # now make a matrix of the two vectors bound together - this way each value of migration
 # is paired with each value of recomb frequency to test the entire range of parameters
 
-test <- cbind(pm, rf)
+test <- cbind(pm, nfds)
 
 # make each row of the matrix into an element in a list - just makes the apply easier
 
@@ -520,44 +521,105 @@ for(i in 1:nrow(test)){
 }
 
 
+r <- migHel1pop(ltest[[13]])
+
 x <- list()
 
-for(i in 1:length(ltest)){
-x[[i]] <- migHel1pop(ltest[[i]])	
+
+for(q in 1:length(ltest)){
+x[[q]] <- migHel1pop(ltest[[q]])	
+}
+
+# we have a list of lists of lists - each element of the 36 main list is a list of n.gen matrices, each of which
+# has two lists for the two populations. We want the change in allele frequency of each population over the generations
+
+# make a function to pull allele frequencies from the 2-pop sub list for one generation
+
+alleleFreqs <- function(list){
+	a1 <- colMeans(list[[1]])
+	m1 <- cbind(mean(a1[2], a1[3]), mean(a1[4], a1[5]), mean(a1[6], a1[7]), mean(a1[8], a1[9]), mean(a1[10], a1[11]), mean(a1[12], a1[13]))
+	a2 <- colMeans(list[[2]])
+	m2 <- cbind(mean(a2[2], a2[3]), mean(a2[4], a2[5]), mean(a2[6], a2[7]), mean(a2[8], a2[9]),mean(a2[10], a2[11]), mean(a2[12], a2[13]))
+return(list(m1, m2))
+}
+
+# apply the allele freqs function to the full list for all generations for one set of input parameters
+
+
+afTime <- function(timelist){
+y <- lapply(timelist, alleleFreqs)
+
+# pull out the allele freqs for each population to make a matrix
+
+pop1FreqMat <- matrix(NA, ncol=6, nrow=ngen)
+colnames(pop1FreqMat) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
+
+for(i in 1:9){
+	pop1FreqMat[i,] <- y[[i]][[1]]
 }
 
 
-mat <- matrix(NA, ncol=6, nrow=31)
+pop2FreqMat <- matrix(NA, ncol=6, nrow=9)
+colnames(pop2FreqMat) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
 
-for(i in 1:31){
-mat[i,] <- colMeans(x[[i]][2:9,])
+for(i in 1:9){
+	pop2FreqMat[i,] <- y[[i]][[2]]
 }
 
-xbarMeans <- matrix(mat[1:30,1], ncol=6)
+return(list(pop1FreqMat, pop2FreqMat))
+}
 
-xspotMeans <- matrix(mat[1:30,2], ncol=6)
 
-xspRecMeans <- matrix(mat[1:30,3], ncol=6)
+time1 <- afTime(x[[62]])
 
-xmrphRecMeans <- matrix(mat[1:30,4], ncol=6)
+plot(seq(0,1, by=1/8), type="n")
+points(time1[[1]][,5], col="red")
+points(time1[[1]][,1], pch=15, col="red")
+points(time1[[2]][,5], col="blue")
+points(time1[[2]][,1], pch=15, col="blue")
+
+# could we do something with mean/sd across generations?
+
+# 3-d plot
+
+# get frequency differences in each generation, return average for each allele at each parameter value
+
+freqDiffs <- function(biglist){
+d <- lapply(biglist, afTime)
+
+e <- lapply(d, function(list){return(abs(list[[1]]-list[[2]]))})
+
+f <- lapply(e, colMeans)
+
+g <- matrix(unlist(f), ncol=6, byrow=T)
+colnames(g) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
+
+return(g)
+	
+}
+
+fDs <- freqDiffs(x)
+
+# make a matrix of percent migrate vs. percent nfds for each allele
+# the rows will be percent migrate (6 rows), the columns percent nfds (also 6)
+
+barMat <- matrix(fDs[,1], nrow=3)
+
+ulMat <- matrix(fDs[,5], nrow=3)
+
 
 
 # plots!
 
-par(mfrow=c(2,2))
+par(mfrow=c(1,2))
 par(mar=c(1,1,1,1))
 
-persp(rf1[1:5], pm1, xbarMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+persp(nfds1, pm1, barMat,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.25))
 
-persp(rf1[1:5], pm1, xspotMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
+persp(nfds1, pm1, ulMat,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.25))
 
-persp(rf1[1:5], pm1, xspRecMeans, theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
-
-persp(rf1[1:5], pm1, xmrphRecMeans,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.15))
 
 
 
