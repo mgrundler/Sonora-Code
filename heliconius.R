@@ -1,9 +1,6 @@
 # getting rid of any residual named objects 
 rm(list=ls())
 
-# our normal starting objects
-start.pop <- 50
-
 ba1 <- c(0.9, 0.01, 0.9, 0.9)
 ba2 <- c(0.9, 0.0, 0.01, 0.9)
 
@@ -445,18 +442,16 @@ n.pred1[is.na(n.pred1)] <- 0
 pt2[is.na(pt2)] <- 0
 n.pred2[is.na(n.pred2)] <- 0
 
-
-
 predated1 <- list()
 
 for(i in 1:4){
-	if(pt1[[i]] > (n.pred1[i]+2)){predated1[[i]] <- ptlist1[[i]][1:(pt1[[i]]-n.pred1[i]),]}else{predated1[[i]] <- c()}
+	if(pt1[i] > (n.pred1[i]+2)){predated1[[i]] <- ptlist1[[i]][1:(pt1[i]-n.pred1[i]),]}else{predated1[[i]] <- c()}
 }
 
 predated2 <- list()
 
 for(i in 1:4){
-	if(pt2[[i]]>(n.pred2[i]+2)){predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]}else{
+	if(pt2[i]>(n.pred2[i]+2)){predated2[[i]] <- ptlist2[[i]][1:(pt2[i]-n.pred2[i]),]}else{
 		predated2[[i]] <- c()}
 }
 
@@ -551,18 +546,18 @@ y <- lapply(timelist, alleleFreqs)
 
 # pull out the allele freqs for each population to make a matrix
 
-pop1FreqMat <- matrix(NA, ncol=6, nrow=ngen)
+pop1FreqMat <- matrix(NA, ncol=6, nrow=ngen+1)
 colnames(pop1FreqMat) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
 
-for(i in 1:9){
+for(i in 1:ngen+1){
 	pop1FreqMat[i,] <- y[[i]][[1]]
 }
 
 
-pop2FreqMat <- matrix(NA, ncol=6, nrow=9)
+pop2FreqMat <- matrix(NA, ncol=6, nrow=ngen+1)
 colnames(pop2FreqMat) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
 
-for(i in 1:9){
+for(i in 1:ngen+1){
 	pop2FreqMat[i,] <- y[[i]][[2]]
 }
 
@@ -572,11 +567,11 @@ return(list(pop1FreqMat, pop2FreqMat))
 
 time1 <- afTime(x[[62]])
 
-plot(seq(0,1, by=1/8), type="n")
-points(time1[[1]][,5], col="red")
-points(time1[[1]][,1], pch=15, col="red")
-points(time1[[2]][,5], col="blue")
-points(time1[[2]][,1], pch=15, col="blue")
+plot(seq(0,1, by=1/ngen), type="n")
+lines(time1[[1]][,5], col="red")
+lines(time1[[1]][,1], lty=3, col="red")
+lines(time1[[2]][,5], col="blue")
+lines(time1[[2]][,1], lty=3, col="blue")
 
 # could we do something with mean/sd across generations?
 
@@ -584,12 +579,14 @@ points(time1[[2]][,1], pch=15, col="blue")
 
 # get frequency differences in each generation, return average for each allele at each parameter value
 
+
 freqDiffs <- function(biglist){
 d <- lapply(biglist, afTime)
 
 e <- lapply(d, function(list){return(abs(list[[1]]-list[[2]]))})
 
-f <- lapply(e, colMeans)
+f <- lapply(e, function(list){return(colMeans(list[10:nrow(list),]))})
+
 
 g <- matrix(unlist(f), ncol=6, byrow=T)
 colnames(g) <- c("bar", "spot", "sprec", "mphrec", "ul", "linked")
@@ -603,9 +600,9 @@ fDs <- freqDiffs(x)
 # make a matrix of percent migrate vs. percent nfds for each allele
 # the rows will be percent migrate (6 rows), the columns percent nfds (also 6)
 
-barMat <- matrix(fDs[,1], nrow=3)
+barMat <- matrix(fDs[,1], nrow=length(pm1), byrow=F)
 
-ulMat <- matrix(fDs[,5], nrow=3)
+ulMat <- matrix(fDs[,5], nrow=length(pm1), byrow=F)
 
 
 
@@ -614,11 +611,11 @@ ulMat <- matrix(fDs[,5], nrow=3)
 par(mfrow=c(1,2))
 par(mar=c(1,1,1,1))
 
-persp(nfds1, pm1, barMat,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+persp(pm1, nfds1, barMat,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.3))
 
-persp(nfds1, pm1, ulMat,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,0.25))
+persp(pm1, nfds1, ulMat,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.3))
 
 
 
@@ -627,16 +624,21 @@ ticktype="detailed", zlim=c(0,0.25))
 # two pops ##################################
 #############################################
 
+
 start.pop <- 1000
 p1start <- 0.5
 p2start <- 0.5
 n.off <- 3
 carrying.capacity <- 1000
-ngen <- 8
+ngen <- 100
 
+
+#vec <- c(0.1, 0.1)
+#vec <- ltest[[12]]
 
 migHel2pop <- function(vec){
-	
+
+# get the genotypes started	
 geno1 <- matrix(rbinom(start.pop*8, 1, p1start), ncol=8)
 
 recombSpot <- rbinom(nrow(geno1), 1, LF)
@@ -695,9 +697,9 @@ colnames(geno2) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sp
 
 pops <- list()
 
-pops[[1]] <- list(geno1, geno2)
+pops[[1]] <-list(geno1, geno2)
 
-z=1
+#z=9
 for(z in 1:ngen){
 		# make offspring
 	g1 <- pops[[z]][[1]][,2:13]	
@@ -715,7 +717,8 @@ if(n.mig==0){
 	geno2m <- rbind(g1[1:n.mig,], g2[(n.mig+1):nrow(g2),])
 }
 	
-	# make offspring
+	# make offspring - this accounts for who gets to reproduce according to morph/species recognition,
+	# and the resulting offspring
 	offspring1 <- get.heliconius.offspring(geno1m,n.off)
 	offspring2 <- get.heliconius.offspring(geno2m,n.off)
 	off1 <- offspring1[[1]]
@@ -723,7 +726,7 @@ if(n.mig==0){
 	pb1 <- offspring1[[2]]
 	pb2 <- offspring2[[2]]
 	
-	# make phenotypes
+	# make phenotypes - break them in lists and use the if/else to account for morphs that aren't in the population
 	
 	pheno1 <- phenotype(1:4, off1)
 	pheno2 <- phenotype(1:4, off2)
@@ -761,12 +764,21 @@ fds2 <- do.call(rbind, ptlist2)
 
 fds <- rbind(fds1, fds2)
 
-FDS1 <- PFDS(fds, ba1, sim)
-FDS2 <- PFDS(fds, ba2, sim)
+# do the frequency dependent selection - you can put any matrix into the function
 
+FDS1 <- PFDS(fds, ba1, sim)
+
+FDS2 <- PFDS(fds, ba2, sim)
 ######################################################
+
+# use the LV equation to decide how many will die
+
 threshold1 <- round(nrow(fds1)*exp(n.off*pb1*(1-nrow(fds1)/carrying.capacity)))
 threshold2 <- round(nrow(fds2)*exp(n.off*pb2*(1-nrow(fds2)/carrying.capacity)))
+
+# if/else to deal with non-existent morphs - vec[2] decides what percentage of the total 
+# mortality will be morph-dependent. You take that percentage and divide it up between 
+# morphs to get the final number that will be removed
 
 if(nrow(fds1)>threshold1){
 	n.pred1 <- round(((nrow(fds1)-threshold1)*vec[2])*FDS1)
@@ -776,17 +788,25 @@ if(nrow(fds2)>threshold2){
 	n.pred2 <- round(((nrow(fds2)-threshold2)*vec[2])*FDS2)
 }else{n.pred2 <- c(0,0,0,0)}
 
+# remove the predated ones
+
+pt1[is.na(pt1)] <- 0
+n.pred1[is.na(n.pred1)] <- 0
+
+pt2[is.na(pt2)] <- 0
+n.pred2[is.na(n.pred2)] <- 0
 
 predated1 <- list()
 
 for(i in 1:4){
-	predated1[[i]] <- ptlist1[[i]][1:(nrow(ptlist1[[i]])-n.pred1[i]),]
+	if(pt1[i] > (n.pred1[i]+2)){predated1[[i]] <- ptlist1[[i]][1:(pt1[i]-n.pred1[i]),]}else{predated1[[i]] <- c()}
 }
 
 predated2 <- list()
 
 for(i in 1:4){
-	predated2[[i]] <- ptlist2[[i]][1:(nrow(ptlist2[[i]])-n.pred2[i]),]
+	if(pt2[i]>(n.pred2[i]+2)){predated2[[i]] <- ptlist2[[i]][1:(pt2[i]-n.pred2[i]),]}else{
+		predated2[[i]] <- c()}
 }
 
 fin1 <- do.call(rbind, predated1)
@@ -794,16 +814,19 @@ fin1 <- fin1[sample(nrow(fin1)),]
 fin2 <- do.call(rbind, predated2)
 fin2 <- fin2[sample(nrow(fin2)),]
 
+# now get rid of the rest that will die, taking random individuals
+
 LV1 <- round(threshold1-(nrow(fds1)-threshold1)*(vec[2]))
 LV2 <- round(threshold2-(nrow(fds2)-threshold2)*(vec[2]))
 
 if(nrow(fin1)>threshold1){
 	fin1 <- fin1[1:LV1,]
-} else{fin1 <- fin1}
+} else if(nrow(fin1)>1){fin1 <- fin1}else{fin1 <- c()}
+
 
 if(nrow(fin2)>threshold2){
 	fin2 <- fin2[1:LV2,]
-} else{fin2 <- fin2}
+} else if(nrow(fin2)>1){fin2 <- fin2}else{fin2<- c()}
 
 
 fin <- list(fin1, fin2)
@@ -811,12 +834,101 @@ fin <- list(fin1, fin2)
 pops[[z+1]] <- fin
 
 }
-diffs <- lapply(pops, freqDiffs)
 
-fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
+# get the frequency differences between populations using this code
+#diffs <- lapply(pops, freqDiffs)
 
-return(fMat)
+#fMat <- matrix(unlist(diffs), ncol=6, byrow=T)
+
+return(pops)
 
 }
 
+# this is all to make figures
+
+pm1 <- seq(0, 0.1, by=0.01)
+nfds1 <- seq(0, 1, by=0.2)
+
+# now repeat the complete first vector the same number of times as the length of second vector
+
+pm <- rep(pm1, length(nfds1))
+
+# repeat each element of the second vector the same number of times as the length of the first vector
+nfds <- rep(nfds1, each=length(pm1))
+
+# now make a matrix of the two vectors bound together - this way each value of migration
+# is paired with each value of recomb frequency to test the entire range of parameters
+
+test <- cbind(pm, nfds)
+
+# make each row of the matrix into an element in a list - just makes the apply easier
+
+ltest <- list()
+
+for(i in 1:nrow(test)){
+	ltest[[i]] <- test[i,]
+}
+
+
+
+x2 <- list()
+
+
+for(q in 1:length(ltest)){
+x2[[q]] <- migHel2pop(ltest[[q]])	
+}
+
+# we have a list of lists of lists - each element of the 36 main list is a list of n.gen matrices, each of which
+# has two lists for the two populations. We want the change in allele frequency of each population over the generations
+
+# make a function to pull allele frequencies from the 2-pop sub list for one generation
+
+
+time2 <- afTime(x2[[59]])
+time1 <- afTime(x[[59]])
+
+par(mfrow=c(2,1))
+par(mar=c(2,2,2,2))
+
+plot(seq(0,1, by=1/ngen), type="n", main="Predator sees one")
+lines(time2[[1]][,3], lty=3, col="red")
+lines(time2[[1]][,1], col="red")
+lines(time2[[2]][,3], lty=3,  col="blue")
+lines(time2[[2]][,1], col="blue")
+
+
+plot(seq(0,1, by=1/ngen), type="n", main="Predator sees both")
+lines(time1[[1]][,3], lty=3, col="red")
+lines(time1[[1]][,1], col="red")
+lines(time1[[2]][,3],lty=3,  col="blue")
+lines(time1[[2]][,1], col="blue")
+
+# could we do something with mean/sd across generations?
+
+# 3-d plot
+
+# get frequency differences in each generation, return average for each allele at each parameter value
+
+
+fDs2 <- freqDiffs(x2)
+
+# make a matrix of percent migrate vs. percent nfds for each allele
+# the rows will be percent migrate (6 rows), the columns percent nfds (also 6)
+
+barMat2 <- matrix(fDs2[,1], nrow=length(pm1), byrow=F)
+
+ulMat2 <- matrix(fDs2[,5], nrow=length(pm1), byrow=F)
+
+
+
+# plots!
+
+par(mfrow=c(1,2))
+par(mar=c(1,1,1,1))
+
+persp(pm1, nfds1, barMat2,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.3))
+
+persp(pm1, nfds1, ulMat2,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,0.3))
 
