@@ -701,7 +701,7 @@ parseMorphs <- function(listFreqs){
 		
 	# parse the results - if the mean number of morphs across 300 generations is greater than 3, then throughout most of the time, both populations will have all four morphs. If the mean number is less than 1.5, then in most cases both populations were fixed for a single morph (feel free to change the cutoff points as makes sense to you). 
 	morphResult <- c()
-	if(mean1 > 3 & mean2 > 3){morphResult[1]=1} else if(mean1 < 1.5 & mean2 < 1.5){morphResult[1] = 3}else{morphResult[1]=2}
+	if(mean1 > 3 & mean2 > 3){morphResult[1]=1} else if(mean1 < 1.5 & mean2 > 2.5 | mean1 > 2.5 & mean2 < 1.5 ){morphResult[1] = 3}else{morphResult[1]=2}
 	
 	return(morphResult)
 }
