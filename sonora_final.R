@@ -148,7 +148,7 @@ proportions <- totals/sum(totals)}
 percent.breed <- 0.5
 carrying.capacity <- 500
 start.pop <- 200
-n.gen <- 1000
+n.gen <- 300
 
 # the function - takes a two element vector of percent migrating and the percentage of the total number of mortalities per generation that are due to NFDS
 
@@ -669,5 +669,77 @@ ticktype="detailed", zlim=c(0,1),main="coding, both", xlab="migration", ylab="NF
 
 persp(pm1, nfds1, ulMat2,theta=30, phi=30, col="lightblue", shade=0.4,
 ticktype="detailed", zlim=c(0,1),main="unlinked, both", xlab="migration", ylab="NFDS", zlab="allele freq difference")
+
+
+############################################################
+# code to parse outcomes of multiple runs of same variables#
+############################################################
+# the function to take in 
+parseMorphs <- function(listFreqs){
+	# get just the morphs for each population
+	intList <- lapply(listFreqs, function(list2){return(list(list2[[1]][,1], list2[[2]][,1]))})
+	# see which morphs are present
+	freqList <- lapply(intList, function(list3){return(list(table(list3[[1]]), table(list3[[2]])))})
+	# get the lengths of the list - will be 4 for case 1 (all 4 morphs present in both populations), 2 for case 2 (2 morphs in pop 1, the other two in pop 2), 1 for case 3 (each population fixed for a different morph)
+
+	lengthList <- lapply(freqList, function(list4){return(list(length(list4[[1]]), length(list4[[2]])))})
+	
+	# get generations 200-300
+
+	lengthListCut <- lengthList[200:300]
+	# separate pop 1 from pop 2	
+	length1 <- c()
+	length2 <- c()
+	
+	for(i in 1:length(lengthListCut)){
+		length1[i] <- lengthListCut[[i]][[1]]
+		length2[i] <- lengthListCut[[i]][[2]]
+	}
+	# find the average # of morphs for each population across generations 200-500
+	mean1 <- mean(length1)
+	mean2 <- mean(length2)
+		
+	# parse the results - if the mean number of morphs across 300 generations is greater than 3, then throughout most of the time, both populations will have all four morphs. If the mean number is less than 1.5, then in most cases both populations were fixed for a single morph (feel free to change the cutoff points as makes sense to you). 
+	morphResult <- c()
+	if(mean1 > 3 & mean2 > 3){morphResult[1]=1} else if(mean1 < 1.5 & mean2 < 1.5){morphResult[1] = 3}else{morphResult[1]=2}
+	
+	return(morphResult)
+}
+
+# re-running the simulation with the same parameters 10 times
+bpSeeBoth <- list()
+
+for(j in 1:10){
+	bpSeeBoth[[j]] <- migLDboth(c(0.01,0.95))
+}
+
+# getting the outcomes of the simulations
+bpBoth <- lapply(bpSeeBoth, parseMorphs)
+# see how many simulations lead to each outcome
+tabBoth <- table(unlist(bpBoth))
+# make a barplot - this can get much fancier!
+barplot(tabBoth)
+
+# do the same with the predator only seeing one pop at a time
+bpSeeOne <- list()
+
+for(j in 1:10){
+	bpSeeOne[[j]] <- migLD(c(0.01,0.95))
+}
+
+
+barPlotOne <- lapply(bpSeeOne, parseMorphs)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
