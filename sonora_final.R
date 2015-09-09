@@ -709,7 +709,7 @@ parseMorphs <- function(listFreqs){
 # re-running the simulation with the same parameters 10 times
 bpSeeBoth <- list()
 
-for(j in 1:10){
+for(j in 1:30){
 	bpSeeBoth[[j]] <- migLDboth(c(0.01,0.95))
 }
 
@@ -723,15 +723,65 @@ barplot(tabBoth)
 # do the same with the predator only seeing one pop at a time
 bpSeeOne <- list()
 
-for(j in 1:10){
+for(j in 3:10){
 	bpSeeOne[[j]] <- migLD(c(0.01,0.95))
 }
 
-
 barPlotOne <- lapply(bpSeeOne, parseMorphs)
+tabone <- table(unlist(barPlotOne))
+
+barplot(rbind(c(0,22,8), c(30,0,0)), beside=T)
 
 
 
+pm1 <- seq(0, 0.1, by=0.02)
+nfds1 <- seq(0, 1, by=0.1)
+
+# now repeat the complete first vector the same number of times as the length of second vector
+
+pm <- rep(pm1, length(nfds1))
+
+# repeat each element of the second vector the same number of times as the length of the first vector
+nfds <- rep(nfds1, each=length(pm1))
+
+# now make a matrix of the two vectors bound together - this way each value of migration
+# is paired with each value of recomb frequency to test the entire range of parameters
+
+test <- cbind(pm, nfds)
+
+# make each row of the matrix into an element in a list - just makes the apply easier
+
+ltest <- list()
+
+for(i in 1:nrow(test)){
+	ltest[[i]] <- test[i,]
+}
+
+
+outcome <- list()
+
+for(b in 1:length(ltest)){
+bpSeeBoth <- list()
+
+for(j in 1:10){
+	bpSeeBoth[[j]] <- migLD(ltest[[b]])
+}
+
+# getting the outcomes of the simulations
+bpBoth <- lapply(bpSeeBoth, parseMorphs)
+# see how many simulations lead to each outcome
+outcome[[b]] <- mean(unlist(bpBoth))
+}
+
+outcome1 <- unlist(outcome)
+
+outMat <- matrix(outcome1, nrow=length(pm1))
+outMat <- outMat -1
+matrix(pm, nrow=11)
+matrix(nfds, nrow=11)
+
+persp(pm1, nfds1, outMat,theta=30, phi=30, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,2), main="outcomes", xlab="percent migration", ylab="selection strength", zlab="avg. number alleles fixed")
 
 
 
