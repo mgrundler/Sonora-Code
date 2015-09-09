@@ -289,7 +289,7 @@ p1start <- 0.5
 p2start <- 0.5
 n.off <- 5
 carrying.capacity <- 500
-ngen <- 1000
+ngen <- 500
 
 
 migHel1pop <- function(vec){
@@ -315,6 +315,7 @@ for(i in 1:start.pop){
 	if(recombination[i]==0){linked1[i,] <- geno1[,1:2][i,]} else
 		linked1[i,]<- geno1[,1:2][i,c(2,1)]
 }
+geno1 <- cbind(geno1[,1:2], spot1, geno1[,3:8], linked1)
 
 pheno1 <- phenotype(1:4, geno1)
 
@@ -343,6 +344,8 @@ for(i in 1:start.pop){
 	if(recombination2[i]==0){linked1.2[i,] <- geno2[,1:2][i,]} else
 		linked1.2[i,]<- geno2[,1:2][i,c(2,1)]
 }
+
+geno2 <- cbind(geno2[,1:2], spot1.2, geno2[,3:8], linked1.2)
 
 pheno2 <- phenotype(1:4, geno2)
 
@@ -629,6 +632,7 @@ for(i in 1:start.pop){
 	if(recombination[i]==0){linked1[i,] <- geno1[,1:2][i,]} else
 		linked1[i,]<- geno1[,1:2][i,c(2,1)]
 }
+geno1 <- cbind(geno1[,1:2], spot1, geno1[,3:8], linked1)
 
 pheno1 <- phenotype(1:4, geno1)
 
@@ -658,11 +662,12 @@ for(i in 1:start.pop){
 		linked1.2[i,]<- geno2[,1:2][i,c(2,1)]
 }
 
+geno2 <- cbind(geno2[,1:2], spot1.2, geno2[,3:8], linked1.2)
+
 pheno2 <- phenotype(1:4, geno2)
 
 geno2 <- cbind(pheno2, geno2[,1:2], spot1.2, geno2[,3:8], linked1.2)
 colnames(geno2) <- c("phenotype","bar1", "bar2", "spot1", "spot2", "sprec1", "sprec2", "mphrec1", "mphrec2","ul1", "ul2", "linked1", "linked2")
-
 # start for loop ###############################
 
 pops <- list()
@@ -877,4 +882,146 @@ ticktype="detailed", zlim=c(0,1), main="bar, both",xlab="migration", ylab="stren
 
 persp(pm1, nfds1, ulMat2,theta=30, phi=30, col="lightblue", shade=0.4,
 ticktype="detailed", zlim=c(0,1), main="unlinked, both",xlab="migration", ylab="strength fds", zlab="diff allele freq")
+
+########################################################
+# make the figure ######################################
+########################################################
+
+listFreqs <- migHel2pop(c(0.01, 0.6))
+
+# the function to take in 
+parseMorphs <- function(listFreqs){
+	# get just the morphs for each population
+	intList <- lapply(listFreqs, function(list2){return(list(list2[[1]][,1], list2[[2]][,1]))})
+	# see which morphs are present
+	freqList <- lapply(intList, function(list3){return(list(table(list3[[1]]), table(list3[[2]])))})
+	# get the lengths of the list - will be 4 for case 1 (all 4 morphs present in both populations), 2 for case 2 (2 morphs in pop 1, the other two in pop 2), 1 for case 3 (each population fixed for a different morph)
+
+	lengthList <- lapply(freqList, function(list4){return(list(length(list4[[1]]), length(list4[[2]])))})
+	
+	# get generations 200-300
+
+	lengthListCut <- lengthList[200:300]
+	# separate pop 1 from pop 2	
+	length1 <- c()
+	length2 <- c()
+	
+	for(i in 1:length(lengthListCut)){
+		length1[i] <- lengthListCut[[i]][[1]]
+		length2[i] <- lengthListCut[[i]][[2]]
+	}
+	# find the average # of morphs for each population across generations 200-500
+	mean1 <- mean(length1)
+	mean2 <- mean(length2)
+		
+	# parse the results - if the mean number of morphs across 300 generations is greater than 3, then throughout most of the time, both populations will have all four morphs. If the mean number is less than 1.5, then in most cases both populations were fixed for a single morph (feel free to change the cutoff points as makes sense to you). 
+	
+	morphResult <- c()
+	if(mean1 > 3 & mean2 > 3){morphResult[1]=1} else if(mean1 < 1.5 & mean2 < 1.5 & intList[[250]][[1]][1] != intList[[250]][[2]][1]){morphResult[1] = 3} else if(mean1 < 1.5 & mean2 < 1.5 & intList[[250]][[1]][1] == intList[[250]][[2]][1]){morphResult[1]=4} else{morphResult[1]=2}
+	
+	return(morphResult)
+}
+
+# re-running the simulation with the same parameters 10 times
+
+
+bprep <- replicate(2, migHel2pop(c(0.01,0.95)))
+
+bpSeeBoth <- list()
+
+for(i in 1:ncol(bprep)){
+	bpSeeBoth[[i]] <- bprep[,i]
+}
+
+# getting the outcomes of the simulations
+bpBoth <- lapply(bpSeeBoth, parseMorphs)
+# see how many simulations lead to each outcome
+tabBoth <- table(unlist(bpBoth))
+# make a barplot - this can get much fancier!
+barplot(tabBoth)
+
+# do the same with the predator only seeing one pop at a time
+bpSeeOne <- list()
+
+for(j in 1:10){
+	bpSeeOne[[j]] <- migLD(c(0.01,0.95))
+}
+
+barPlotOne <- lapply(bpSeeOne, parseMorphs)
+
+
+
+
+pm1 <- seq(0, 0.1, by=0.02)
+nfds1 <- seq(0, 1, by=0.1)
+
+# now repeat the complete first vector the same number of times as the length of second vector
+
+pm <- rep(pm1, length(nfds1))
+
+# repeat each element of the second vector the same number of times as the length of the first vector
+nfds <- rep(nfds1, each=length(pm1))
+
+# now make a matrix of the two vectors bound together - this way each value of migration
+# is paired with each value of recomb frequency to test the entire range of parameters
+
+test <- cbind(pm, nfds)
+
+# make each row of the matrix into an element in a list - just makes the apply easier
+
+ltest <- list()
+
+for(i in 1:nrow(test)){
+	ltest[[i]] <- test[i,]
+}
+
+ngen=300
+outcome1pop <- list()
+
+for(b in 1:length(ltest)){
+	
+bprep <- replicate(2, migHel1pop(ltest[[b]]))
+
+bpSeeBoth <- list()
+
+for(i in 1:ncol(bprep)){
+	bpSeeBoth[[i]] <- bprep[,i]
+}
+
+
+# getting the outcomes of the simulations
+bpBoth <- lapply(bpSeeBoth, parseMorphs)
+# see how many simulations lead to each outcome
+outcome1pop[[b]] <- mean(unlist(bpBoth))
+}
+
+outcome1 <- unlist(outcome1pop)
+
+outMat <- matrix(outcome1, nrow=length(pm1))
+outMat <- outMat -1
+matrix(pm, nrow=length(pm1))
+matrix(nfds, nrow=length(pm1))
+
+quartz.options(width=4, height=4)
+persp(pm1, nfds1, outMat,theta=60, phi=10, col="lightblue", shade=0.4,
+ticktype="detailed", zlim=c(0,3), main="outcomes", xlab="percent migration", ylab="selection strength", zlab="avg. number alleles fixed")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
