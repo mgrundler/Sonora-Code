@@ -709,8 +709,8 @@ parseMorphs <- function(listFreqs){
 # re-running the simulation with the same parameters 10 times
 bpSeeBoth <- list()
 
-for(j in 1:30){
-	bpSeeBoth[[j]] <- migLDboth(c(0.01,0.95))
+for(j in 1:100){
+	bpSeeBoth[[j]] <- migLDboth(c(0.01,0.4))
 }
 
 # getting the outcomes of the simulations
@@ -734,8 +734,8 @@ barplot(rbind(c(0,22,8), c(30,0,0)), beside=T)
 
 
 
-pm1 <- seq(0, 0.1, by=0.02)
-nfds1 <- seq(0, 1, by=0.1)
+pm1 <- seq(0, 0.1, by=0.01)
+nfds1 <- seq(0, 1, by=0.05)
 
 # now repeat the complete first vector the same number of times as the length of second vector
 
@@ -773,15 +773,32 @@ bpBoth <- lapply(bpSeeBoth, parseMorphs)
 outcome[[b]] <- mean(unlist(bpBoth))
 }
 
+
 outcome1 <- unlist(outcome)
 
 outMat <- matrix(outcome1, nrow=length(pm1))
 outMat <- outMat -1
+
+write.table(outMat, "~/Desktop/Sonora/sonora1pop.csv")
 matrix(pm, nrow=11)
 matrix(nfds, nrow=11)
 
-persp(pm1, nfds1, outMat,theta=30, phi=30, col="lightblue", shade=0.4,
-ticktype="detailed", zlim=c(0,2), main="outcomes", xlab="percent migration", ylab="selection strength", zlab="avg. number alleles fixed")
+sonora1pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora1pop.csv"))
+colnames(sonora1pop) <- nfds1
+rownames(sonora1pop) <- pm1[2:11]
+sonora2pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora2pop.csv"))
+colnames(sonora2pop) <- nfds1
+rownames(sonora2pop) <- pm1[2:11]
+
+heatCol=heat.colors(150)
+quartz(height=6, width=6)
+par(mar=c(1,1,1,1))
+ trellis.par.set("axis.line",list(col=NA,lty=1,lwd=1))
+sonora1 <- wireframe(sonora1pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="", col.regions=heatCol, at=seq(from=0, to=3, by=0.2), main="local")
+sonora2 <- wireframe(sonora2pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=3, by=0.2), main="regional")
+hel1 <- wireframe(hel1pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=3, by=0.2))
+
+grid.arrange(sonora1, sonora2, hel1, ncol=2)
 
 
 
