@@ -783,10 +783,10 @@ write.table(outMat, "~/Desktop/Sonora/sonora1pop.csv")
 matrix(pm, nrow=11)
 matrix(nfds, nrow=11)
 
-sonora1pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora1pop.csv"))
+sonora1pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/sonora1pop.csv"))
 colnames(sonora1pop) <- nfds1
 rownames(sonora1pop) <- pm1
-sonora2pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora2pop.csv"))
+sonora2pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/sonora2pop.csv"))
 colnames(sonora2pop) <- nfds1
 rownames(sonora2pop) <- pm1
 
