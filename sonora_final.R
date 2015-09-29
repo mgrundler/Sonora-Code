@@ -785,28 +785,152 @@ matrix(nfds, nrow=11)
 
 sonora1pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora1pop.csv"))
 colnames(sonora1pop) <- nfds1
-rownames(sonora1pop) <- pm1[2:11]
+rownames(sonora1pop) <- pm1
 sonora2pop <- as.matrix(read.csv("~/Desktop/Sonora/sonora2pop.csv"))
 colnames(sonora2pop) <- nfds1
-rownames(sonora2pop) <- pm1[2:11]
+rownames(sonora2pop) <- pm1
 
-heatCol=heat.colors(150)
-quartz(height=6, width=6)
+hel1pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/heliconius1pop.csv"))+1
+hel2pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/heliconius2pop.csv"))
+
+cep2pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/Cepaea_Outcomes_csv.files/Cepaea_2_pop.csv"))
+cep1pop <- as.matrix(read.csv("~/Dropbox/AmNat_2015/Cepaea_Outcomes_csv.files/Cepaea1pop.csv"))
+
+library(lattice)
+library(gridExtra)
+library(png)
+
+heatCol=rainbow(200)
+
 par(mar=c(1,1,1,1))
- trellis.par.set("axis.line",list(col=NA,lty=1,lwd=1))
-sonora1 <- wireframe(sonora1pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="", col.regions=heatCol, at=seq(from=0, to=3, by=0.2), main="local")
-sonora2 <- wireframe(sonora2pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=3, by=0.2), main="regional")
-hel1 <- wireframe(hel1pop, drape=T, zlim=c(0,3), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=3, by=0.2))
-
-grid.arrange(sonora1, sonora2, hel1, ncol=2)
 
 
+mim <- readPNG(file.choose())
+poly <- readPNG(file.choose())
+redfix <- readPNG(file.choose())
+yelfix <- readPNG(file.choose())
+yelmim <- readPNG(file.choose())
 
 
+sonora1 <- wireframe(sonora1pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="", col.regions=heatCol, at=seq(from=0, to=4, by=0.2), main="local", default.scales=list(arrows=T))
+
+sonora2 <- wireframe(sonora2pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=4, by=0.2), main="regional",default.scales=list(arrows=T))
+
+hel1 <- wireframe(hel1pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=4, by=0.2),default.scales=list(arrows=T))
+
+hel2 <- wireframe(hel2pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=4, by=0.2),default.scales=list(arrows=T))
+
+cep1 <- wireframe(cep1pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=4, by=0.2),default.scales=list(arrows=T))
+
+cep2 <- wireframe(cep2pop, drape=T, zlim=c(0,4), xlab="m", ylab="s", pretty=F, zlab="",col.regions=heatCol, at=seq(from=0, to=4, by=0.2),default.scales=list(arrows=T))
+
+quartz(height=11, width=9.5)
+trellis.par.set("axis.line",list(col="black",lty=1,lwd=1))
+grid.arrange(sonora1, sonora2, cep1, cep2, hel1, hel2,ncol=2)
+grid.text("Sonora", x=0.04, y=0.84, rot=90)
+grid.text("Cepaea", x=0.04, y=0.5, rot=90)
+grid.text("Heliconius", x=0.04, y=0.22, rot=90)
 
 
+grid.raster(poly, width=0.02, x=0.07, y=0.815)
+grid.raster(poly, width=0.02, x=0.09, y=0.815)
+
+grid.raster(redfix, width=0.02, x=0.07, y=0.835)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.835)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.855)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.855)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.875)
+grid.raster(yelmim, width=0.02, x=0.09, y=0.875)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.895)
+grid.raster(mim, width=0.02, x=0.09, y=0.895)
+
+########################################################
+grid.raster(poly, width=0.02, x=0.57, y=0.815)
+grid.raster(poly, width=0.02, x=0.59, y=0.815)
+
+grid.raster(redfix, width=0.02, x=0.57, y=0.835)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.835)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.855)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.855)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.875)
+grid.raster(yelmim, width=0.02, x=0.59, y=0.875)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.895)
+grid.raster(mim, width=0.02, x=0.59, y=0.895)
+ 
+###########################################
+
+grid.raster(poly, width=0.02, x=0.57, y=0.49)
+grid.raster(poly, width=0.02, x=0.59, y=0.49)
+
+grid.raster(redfix, width=0.02, x=0.57, y=0.51)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.51)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.53)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.53)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.55)
+grid.raster(yelmim, width=0.02, x=0.59, y=0.55)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.57)
+grid.raster(mim, width=0.02, x=0.59, y=0.57)
+ 
+############################################
+
+grid.raster(poly, width=0.02, x=0.07, y=0.49)
+grid.raster(poly, width=0.02, x=0.09, y=0.49)
+
+grid.raster(redfix, width=0.02, x=0.07, y=0.51)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.51)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.53)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.53)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.55)
+grid.raster(yelmim, width=0.02, x=0.09, y=0.55)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.57)
+grid.raster(mim, width=0.02, x=0.09, y=0.57)
+
+##############################################
 
 
+grid.raster(poly, width=0.02, x=0.57, y=0.165)
+grid.raster(poly, width=0.02, x=0.59, y=0.165)
+
+grid.raster(redfix, width=0.02, x=0.57, y=0.185)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.185)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.205)
+grid.raster(yelfix, width=0.02, x=0.59, y=0.205)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.225)
+grid.raster(yelmim, width=0.02, x=0.59, y=0.225)
+
+grid.raster(mim, width=0.02, x=0.57, y=0.245)
+grid.raster(mim, width=0.02, x=0.59, y=0.245)
+ 
+############################################
+
+grid.raster(poly, width=0.02, x=0.07, y=0.165)
+grid.raster(poly, width=0.02, x=0.09, y=0.165)
+
+grid.raster(redfix, width=0.02, x=0.07, y=0.185)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.185)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.205)
+grid.raster(yelfix, width=0.02, x=0.09, y=0.205)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.225)
+grid.raster(yelmim, width=0.02, x=0.09, y=0.225)
+
+grid.raster(mim, width=0.02, x=0.07, y=0.245)
+grid.raster(mim, width=0.02, x=0.09, y=0.245)
 
 
 
